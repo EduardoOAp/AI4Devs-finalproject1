@@ -1,132 +1,78 @@
 ---
-description: Estándares de frontend para la SPA Bccr.Supen.Ves.UI dentro de la arquitectura VES
+description: Frontend standards for the Bccr.Supen.Ves.UI SPA within the VES architecture
 globs: ["VES/Bccr.Supen.Ves.UI/Codigo/src/**/*.{js,jsx}", "VES/Bccr.Supen.Ves.UI/Codigo/package.json"]
 alwaysApply: false
 ---
 
-# Estándares de frontend VES
+# VES Frontend Standards
 
-## Alcance y arquitectura real
+## Scope and Actual Architecture
 
-Este documento aplica a la interfaz web `Bccr.Supen.Ves.UI`, no a las APIs ni
-a las capas de datos. El flujo de la solución es:
+> **C/U/R/A document control:** unique normative rules remain here; repeated example blocks are preserved in full in [frontend-examples.md](./frontend-examples.md). Statements marked V still require verification against the source code, theme, environments, and contracts. Prototype documentation MUST NOT be treated as evidence of the current implementation.
+
+This document applies to the `Bccr.Supen.Ves.UI` web interface, not to the APIs or data-access layers. The solution's request flow is:
 
 ```text
 Navegador (UI React) → Bccr.Supen.Ves.Api → Bccr.Supen.Ves.Mapi → BW → DA → SQL Server
 ```
 
-- La UI consume por HTTP/HTTPS únicamente `Bccr.Supen.Ves.Api`; no llama
-  directamente a MAPI ni accede a SQL Server.
-- La API de VES orquesta las solicitudes mediante su `SI.SG` y se comunica con
-  MAPI. Las capas `MAPI → BW → DA` pertenecen solo al proyecto MAPI.
-- La UI es una SPA escrita principalmente en JavaScript y JSX. No usa
-  TypeScript, React Bootstrap, Cypress, Jest ni una capa de internacionalización
-  i18n. No se deben imponer esas tecnologías ni convertir código para ajustarse
-  a ellas.
-- El mapa de los tres componentes está en
-  [base-standards.md](./base-standards.md). La estructura y los comandos
-  concretos de la UI se mantienen en
-  [Bccr.Supen.Ves.UI/README.md](..\VES\Bccr.Supen.Ves.UI/README.md),
-  [AGENT.md](..\VES\Bccr.Supen.Ves.UI/AGENT.md),
-  [Deploy guide](..\VES\Bccr.Supen.Ves.UI\Documentacion\Deploy.md),
-  [SPEC.md](..\VES\Bccr.Supen.Ves.UI/SPEC.md) y
-  [Documentacion/DEVELOPMENT.md](..\VES\Bccr.Supen.Ves.UI\Documentacion\DEVELOPMENT.md).
+- The UI communicates over HTTP/HTTPS exclusively with `Bccr.Supen.Ves.Api`; it MUST NOT call MAPI directly or access SQL Server.
+- When reviewing or changing a contract consumed by the UI, consult the [DTO/contract catalog](./data-model.md) and the effective API contracts; DO NOT treat the tables in `SCHEMA.md` as React component models.
+- The VES API orchestrates requests through its `SI.SG` and communicates with MAPI. The `MAPI → BW → DA` layers belong exclusively to the MAPI project.
+- The UI is a SPA written primarily in JavaScript and JSX. It does not use TypeScript, React Bootstrap, Cypress, Jest, or an internationalization (i18n) layer. These technologies MUST NOT be imposed, nor should code be converted merely to accommodate them.
+- The three-component architecture is documented in [base-standards.md](./base-standards.md). The UI's specific structure and commands are documented in the [UI README](../VES/Bccr.Supen.Ves.UI/README.md), `VES/Bccr.Supen.Ves.UI/AGENT.md` (outside this package), [UI Deployment Guide](../VES/Bccr.Supen.Ves.UI/Documentacion/Deploy.md), [UI SPEC](../VES/Bccr.Supen.Ves.UI/SPEC.md), and [UI Development Guide](../VES/Bccr.Supen.Ves.UI/Documentacion/DEVELOPMENT.md).
 
-Y para los diseños visuales seguir los lineamientos establecidos en 
-  [Usability guide](..\VES\Bccr.Supen.Ves.UI\Documentacion\USABILIDAD.md).
-  [Data load design system](..\VES\Bccr.Supen.Ves.UI\Prototipo-UI\data-load-design-system.html),
-  [Design handoff guide](..\VES\Bccr.Supen.Ves.UI\Prototipo-UI\DESIGN-HANDOFF.md),
-  [Design system guide](..\VES\Bccr.Supen.Ves.UI\Prototipo-UI\DESIGN-SYSTEM.md),
-  [Design manifests guide](..\VES\Bccr.Supen.Ves.UI\Prototipo-UI\DESIGN-MANIFEST.json).
+For visual design, consult the specialized documentation without assuming the prototype replaces the active theme (see V verification items):
+  [Usability](../VES/Bccr.Supen.Ves.UI/Documentacion/USABILIDAD.md),
+  `Prototipo-UI/data-load-design-system.html` (resource present in the repository),
+  [Visual Handoff](../VES/Bccr.Supen.Ves.UI/Prototipo-UI/DESIGN-HANDOFF.md),
+  [Design System](../VES/Bccr.Supen.Ves.UI/Prototipo-UI/DESIGN-SYSTEM.md),
+  `Prototipo-UI/DESIGN-MANIFEST.json` (resource present in the repository).
 
-Las buenas prácticas de la versión anterior que siguen siendo útiles se
-conservan aquí: componentes funcionales y hooks, estado local apropiado,
-estados de carga y error, validación de formularios, accesibilidad, pruebas
-centradas en el comportamiento, optimización medida y cambios graduales. Los
-ejemplos y herramientas se ajustan a la aplicación VES actual.
+Useful practices from the preceding version are retained: functional components and hooks, appropriate local state, loading and error states, form validation, accessibility, behavior-focused tests, measurement-driven optimization, and incremental changes. The examples and tools are adapted to the current VES application.
 
-## Tecnologías y estructura
+## Technology Stack and Structure
 
-Las versiones exactas se consultan en `Codigo/package.json` y `Codigo/.nvmrc`.
-El stack actual incluye:
+Consult `Codigo/package.json` and `Codigo/.nvmrc` for exact versions. The current stack includes:
 
-- React 19 y React Router DOM 6.
-- JavaScript/JSX, Vite y Node.js 24.x.
-- Material UI v7 (incluidos MUI X Data Grid y Date Pickers) y Bootstrap 5.
-- Axios, Vitest, jsdom y React Testing Library.
-- Day.js y ExcelJS.
+- React 19 and React Router DOM 6.
+- JavaScript/JSX, Vite, and Node.js 24.x.
+- Material UI v7 (including MUI X Data Grid and Date Pickers) and Bootstrap 5.
+- Axios, Vitest, jsdom, and React Testing Library.
+- Day.js and ExcelJS.
 
-Estructura principal de `Codigo/src/`:
+Main structure under `Codigo/src/`:
 
-| Ruta | Responsabilidad |
+| Path | Responsibility |
 |---|---|
-| `STI/` | Pantallas del módulo Sistema de Transferencia de Información |
-| `SEC/` | Pantallas del módulo Servicio de Entidades de Custodia |
-| `componentes/` | Componentes reutilizables de la aplicación |
-| `estilos/` | Tema VES, soporte claro/oscuro, tokens e iconos |
-| `infraestructura/` | Cliente HTTP, sesión, autenticación y utilidades transversales |
-| `rutas/` | Protección y decisiones de navegación |
-| `Constantes.js` | URLs y constantes de la API |
-| `ConstantesGaudi.js` | Configuración de GAUDI/OpenID |
-| `App.jsx`, `Dashboard.jsx` | Composición y navegación principal |
+| `STI/` | Screens for the Information Transfer System module |
+| `SEC/` | Screens for the Custody Entity Service module |
+| `componentes/` | Reusable application components |
+| `estilos/` | VES theme, light/dark mode support, tokens, and icons |
+| `infraestructura/` | HTTP client, session, authentication, and cross-cutting utilities |
+| `rutas/` | Route protection and navigation decisions |
+| `Constantes.js` | API URLs and constants |
+| `ConstantesGaudi.js` | GAUDI/OpenID configuration |
+| `App.jsx`, `Dashboard.jsx` | Main application composition and navigation |
 
-Las pantallas React se ubican por módulo o en `componentes/` si son
-reutilizables. Se usa `.jsx` para archivos con JSX y `.js` para módulos de
-lógica que no contienen JSX, de acuerdo con la configuración actual de Vite.
-No reorganizar carpetas ni cambiar extensiones masivamente como parte de una
-funcionalidad no relacionada.
+Place React screens within their respective modules, or under `componentes/` when reusable. Use `.jsx` for files containing JSX and `.js` for logic modules without JSX, consistent with the current Vite configuration. DO NOT reorganize folders or mass-rename file extensions as part of unrelated feature work.
 
+### Technology Equivalences (Active Standard)
 
-### Matriz de transformación: documento 1 → VES
+Adapting best practices to the VES stack **does not authorize changes to the technology stack**: React 19 + JavaScript/JSX, Vite, React Router DOM 6, MUI v7 alongside existing Bootstrap, and Vitest + React Testing Library. DO NOT impose TypeScript, Create React App, Cypress, Jest, or i18n. Preserve the language of business-domain code, contracts, scripts, and project configuration.
 
-> Las reglas siguientes muestran la equivalencia que debe aplicar un desarrollador
-> o agente al trabajar en VES.
+The original comparison matrix is preserved in full in [frontend-examples.md — transformation](./frontend-examples.md#ejemplo-01).
 
-| Tema del documento 1 | Documento 1 | Equivalencia VES |
-|---|---|---|
-| React | React 18 | React 19 |
-| Lenguaje | TypeScript preferente | JavaScript/JSX |
-| Build | Create React App | Vite |
-| UI | React Bootstrap/Bootstrap | Material UI v7 para código visual nuevo; conservar Bootstrap 5 donde ya exista |
-| HTTP | Axios en servicios | `infraestructura/httpCliente.js` para código nuevo o zonas migradas; Axios existente no se migra masivamente |
-| Routing | React Router | React Router DOM 6 según configuración existente |
-| Unit/component tests | Jest + RTL | Vitest + React Testing Library |
-| E2E | Cypress | No introducir Cypress; no forma parte del stack actual |
-| i18n | i18next obligatorio | No introducir i18n; conservar español y textos del módulo |
-| Estado | `useState`, `useEffect`, custom hooks | Se conserva, con los patrones actuales de VES |
-| Componentes | Funcionales + hooks | Se conserva |
-| Accesibilidad | HTML semántico, teclado, ARIA | Se conserva y se alinea con WCAG 2.1 AA documentado para VES |
-| Variables/funciones | `camelCase` | `camelCase` |
-| Componentes/tipos | `PascalCase` | Componentes `PascalCase`; no introducir tipos/interfaces TypeScript |
-| Constantes | `UPPER_SNAKE_CASE` | Respetar convención real del módulo; algunos exports usan `LAS_RUTAS_EXTERNAS`, otros contratos existentes usan `camelCase` |
-| Archivos | Componentes `PascalCase`, utilidades `camelCase` | Se conserva para archivos nuevos, usando `.jsx` con JSX y `.js` sin JSX |
-| CSS | `kebab-case` | Mantener `kebab-case` en CSS propio; preferir tema/tokens/sx de MUI cuando aplique |
-| Hooks | `use...` | Se conserva (`useTemaVes`, `use...`) |
-| Idioma | Inglés | Español coherente con VES; términos de framework pueden mantenerse en inglés |
+## Coding Conventions
 
-La columna **Equivalencia VES** tiene prioridad al generar o revisar código.
+- Preserve JavaScript/JSX and established patterns. DO NOT require TypeScript for new components.
+- Follow existing Spanish-language naming and comment conventions: `PascalCase` for components and `camelCase` for variables and functions, while respecting module-specific conventions. Existing exported constants may use names such as `LAS_RUTAS_EXTERNAS`.
+- Use functional components and hooks for new code. Destructure props when this improves clarity, and provide default values only when the required behavior is defined.
+- Preserve public API names, configuration keys, and existing contracts; DO NOT rename them solely for stylistic reasons.
+- Prefer small components with clear responsibilities. Extract a shared hook or utility when stateful logic is genuinely reusable, without introducing premature abstractions.
+- DO NOT add dependencies or replace existing libraries without justified need and team approval.
 
-
-## Convenciones de código
-
-- Mantener JavaScript/JSX y los patrones existentes. No introducir TypeScript
-  como requisito para componentes nuevos.
-- Seguir las convenciones españolas existentes para identificadores y
-  comentarios: componentes en PascalCase; nombres de variables y funciones en
-  camelCase, conservando las convenciones de cada módulo. Los exports
-  constantes existentes pueden usar nombres como `LAS_RUTAS_EXTERNAS`.
-- Usar componentes funcionales y hooks para código nuevo. Desestructurar props
-  cuando mejore la claridad y proporcionar valores por defecto solo cuando el
-  comportamiento requerido esté definido.
-- Mantener los nombres públicos del API, las claves de configuración y los
-  contratos existentes; no renombrarlos solo por estilo.
-- Preferir componentes pequeños con responsabilidad clara. Extraer un hook o
-  utilidad compartida cuando exista lógica de estado reutilizable, sin crear
-  abstracciones anticipadamente.
-- No agregar dependencias ni reemplazar librerías existentes sin necesidad
-  justificada y aprobación del equipo.
-
-Ejemplo de componente con las convenciones actuales:
+Example component following current conventions:
 
 ```jsx
 import Button from '@mui/material/Button';
@@ -144,438 +90,43 @@ export default function BotonConsultar({ estaCargando, alConsultar }) {
 }
 ```
 
+### Naming Conventions — Normative Summary
 
-### Convenciones detalladas de escritura y nombres
+| Element | VES rule |
+|---|---|
+| React components and JSX files | `PascalCase`, `.jsx` extension |
+| Variables, functions, event handlers, utilities | `camelCase` and descriptive names |
+| Hooks | `use` prefix and verifiable behavior |
+| Booleans | Affirmative names describing state or conditions |
+| Constants | Preserve the module's conventions and existing public exports |
+| Custom CSS | `kebab-case`; prefer theme tokens/MUI where applicable |
+| Props | Explicit; destructure when it improves readability |
+| Language | Preserve Spanish domain terminology and external contract names without renaming |
 
-> Se conservan las convenciones explícitas para componentes, variables, funciones, constantes,
-> archivos, clases CSS y hooks. Se adaptan al JavaScript/JSX e idioma real de VES.
+Examples and exceptions are retained in [frontend-examples.md — conventions](./frontend-examples.md#ejemplo-02).
 
-#### Componentes React
+### Naming Verification
 
-Usar `PascalCase` para componentes y nombres que describan claramente su
-responsabilidad.
+Apply the **final checklist** in this document rather than maintaining two divergent naming checklists. The legacy checklist is preserved in [the appendix](./frontend-examples.md#ejemplo-03).
 
-**Evitar**
+## Components, Theme, and Styling
 
-```jsx
-export default function boton() {
-    // ...
-}
-```
+### Component and Composition Rules
 
-```jsx
-export default function Componente1() {
-    // ...
-}
-```
+- Create functional components using hooks; DO NOT convert existing classes without a requirement.
+- Split views when it improves readability, testability, or reuse; avoid speculative components.
+- Share hooks only where there is actual common logic; keep state close to its consumers.
+- Access the API through `infraestructura/httpCliente.js` where applicable; DO NOT introduce separate Axios clients or hardcoded URLs for convenience.
+- For new styling, prioritize MUI v7 and `estilos/temaVes.js`, retaining existing Bootstrap where appropriate; avoid competing styling approaches.
+- Preserve adequate contrast, responsive behavior, light/dark themes, visible focus, and `prefers-reduced-motion` support.
 
-**Recomendado**
+Full examples: [frontend-examples.md — components](./frontend-examples.md#ejemplo-04).
 
-```jsx
-export default function BotonConsultar() {
-    // ...
-}
-```
+### UI/UX Patterns Adapted to VES
 
-```jsx
-export default function ResumenDeOperacion() {
-    // ...
-}
-```
+#### MUI for New Visual Components
 
-Un componente debe representar una responsabilidad visual o funcional clara.
-No extraer componentes diminutos únicamente para reducir líneas; extraer cuando
-mejore reutilización, legibilidad, aislamiento o prueba.
-
-#### Variables y funciones
-
-Usar `camelCase`.
-
-```jsx
-const codigoEntidad = 10;
-const tiposDeArchivo = [];
-const obtenerTiposDeArchivo = async () => {};
-```
-
-Evitar abreviaturas ambiguas o nombres sin intención:
-
-```jsx
-const x = 10;
-const arr = [];
-const proc = async () => {};
-```
-
-#### Handlers de eventos
-
-Seguir la convención del módulo. En VES son válidos nombres semánticos en
-español como:
-
-```jsx
-const alConsultar = () => {};
-const alGuardar = () => {};
-const alCambiarArchivo = (event) => {};
-```
-
-Si una zona existente usa `handle...`, conservarla en esa zona antes de
-renombrar solo por estilo.
-
-Evitar:
-
-```jsx
-const click = () => {};
-const fn1 = () => {};
-```
-
-#### Booleanos
-
-Usar nombres que expresen estado o condición:
-
-```jsx
-const [estaCargando, setEstaCargando] = useState(false);
-const [estaGuardando, setEstaGuardando] = useState(false);
-const puedeEditar = permisos.includes('editar');
-const tieneErrores = errores.length > 0;
-```
-
-Evitar:
-
-```jsx
-const [flag, setFlag] = useState(false);
-const ok = true;
-```
-
-#### Constantes
-
-> VES contiene más de una convención pública en `Constantes.js`, por lo que 
-> no debe renombrarse código existente mecánicamente.
-
-Para constantes privadas/locales estables puede usarse una convención clara y
-consistente con el archivo:
-
-```jsx
-const CANTIDAD_MAXIMA_RESULTADOS = 100;
-const TIEMPO_ESPERA_MS = 30_000;
-```
-
-Para exports públicos ya establecidos, conservar su forma actual:
-
-```jsx
-export const LAS_RUTAS_EXTERNAS = { /* ... */ };
-export const apiListarTiposArchivo = '...';
-```
-
-No duplicar URLs o valores de ambiente como constantes dentro de componentes.
-
-#### Hooks
-
-Todo custom hook debe comenzar con `use` y usar `camelCase`:
-
-```jsx
-function useTiposDeArchivo() {
-    // ...
-}
-```
-
-```jsx
-const { esOscuro } = useTemaVes();
-```
-
-No llamar `use...` a una función que no use hooks ni usar hooks fuera de las
-reglas de React.
-
-#### Archivos
-
-Para archivos nuevos:
-
-```text
-BotonConsultar.jsx
-ResumenDeOperacion.jsx
-useTiposDeArchivo.js
-formatoFecha.js
-httpCliente.js
-```
-
-Reglas:
-
-- `PascalCase` para archivos cuyo export principal es un componente React.
-- `camelCase` para hooks, utilidades, infraestructura y módulos sin componente.
-- `.jsx` si contiene JSX.
-- `.js` si no contiene JSX.
-- No renombrar archivos existentes como efecto colateral de otra tarea.
-
-#### CSS propio
-
-Cuando se use CSS tradicional, preferir `kebab-case`:
-
-```css
-.resumen-operacion {}
-.boton-consultar {}
-```
-
-No crear nuevas clases CSS si el mismo objetivo se resuelve de forma coherente
-con el tema MUI, `sx`, tokens VES o una clase ya existente.
-
-#### Props
-
-Desestructurar props cuando mejore la claridad:
-
-```jsx
-export default function BotonConsultar({
-    estaCargando,
-    alConsultar,
-}) {
-    // ...
-}
-```
-
-Evitar pasar props genéricas sin significado:
-
-```jsx
-export default function BotonConsultar(props) {
-    return <button onClick={props.x}>{props.y}</button>;
-}
-```
-
-Usar valores por defecto solo cuando exista un comportamiento definido:
-
-```jsx
-export default function TablaResultados({
-    filas = [],
-    estaCargando = false,
-}) {
-    // ...
-}
-```
-
-No usar defaults para esconder datos requeridos ausentes.
-
-#### Objetos y desestructuración
-
-Desestructurar cuando haga evidente qué datos se usan:
-
-```jsx
-const { name, value } = event.target;
-```
-
-Evitar desestructuración excesiva cuando dificulte rastrear el origen del dato.
-
-#### Idioma de identificadores, mensajes y logs
-
-> VES usa español en UI, negocio, identificadores y documentación; 
-> se conserva la intención de **consistencia lingüística**, no la regla literal.
-
-- Mantener español en conceptos del negocio y UI.
-- Conservar términos propios del framework (`props`, `hook`, `render`, `DataGrid`)
-  cuando sean naturales en el código.
-- Evitar mezclar español e inglés en el mismo concepto sin necesidad.
-- No traducir nombres públicos del API ni claves de configuración.
-- Los mensajes visibles deben usar el vocabulario de la pantalla/módulo.
-- Los logs de desarrollo deben ser breves, diagnósticos y sin datos sensibles.
-
-**Evitar**
-
-```jsx
-const candidateList = await obtenerCandidates();
-console.error('Falló loading candidatos');
-```
-
-**Recomendado**
-
-```jsx
-const listaDeCandidatos = await obtenerCandidatos();
-console.error('No fue posible obtener los candidatos', error);
-```
-
-#### Imports
-
-- Agrupar imports de forma consistente con archivos vecinos.
-- Preferir imports desde las rutas reales del proyecto.
-- No introducir alias nuevos solo para acortar rutas sin ajustar la
-  configuración del proyecto.
-- Eliminar imports sin uso.
-- No importar toda una biblioteca cuando basta un módulo/componente.
-
-Ejemplo:
-
-```jsx
-import Button from '@mui/material/Button';
-import Alert from '@mui/material/Alert';
-```
-
-#### Comentarios
-
-Los comentarios deben explicar decisiones, restricciones o comportamiento no
-evidente.
-
-**Evitar**
-
-```jsx
-// Cambia loading a true
-setEstaCargando(true);
-```
-
-**Recomendado**
-
-```jsx
-// Evita un segundo envío mientras el API procesa la operación actual.
-setEstaCargando(true);
-```
-
-No conservar grandes bloques de código comentado; Git ya mantiene historial.
-
-### Checklist de nomenclatura y escritura
-
-- [ ] Componentes en `PascalCase`.
-- [ ] Variables y funciones en `camelCase`.
-- [ ] Hooks comienzan con `use`.
-- [ ] Booleanos expresan condición/estado.
-- [ ] Archivos de componente en `PascalCase.jsx`.
-- [ ] Utilidades/hooks en `camelCase.js`.
-- [ ] CSS propio en `kebab-case`.
-- [ ] Constantes siguen la convención del módulo; no se renombraron exports
-      públicos solo por estilo.
-- [ ] No hay nombres genéricos como `data1`, `tmp`, `fn`, `flag`, `x`.
-- [ ] No hay URLs de ambiente duplicadas en componentes.
-- [ ] No hay comentarios que repitan literalmente el código.
-- [ ] El idioma es coherente con el módulo y los contratos existentes.
-
-
-## Componentes, tema y estilos
-
-
-### Patrones de componentes y composición
-
-> Se conservan los > principios de componentes funcionales, props explícitas, 
-> hooks y extracción de lógica reutilizable, pero sin introducir TypeScript 
-> ni una arquitectura nueva.
-
-#### Componentes funcionales
-
-Para código nuevo usar funciones y hooks.
-
-**Evitar introducir componentes de clase nuevos**
-
-```jsx
-class ConsultarFondos extends React.Component {
-    // ...
-}
-```
-
-**Recomendado**
-
-```jsx
-export default function ConsultarFondos() {
-    const [estaCargando, setEstaCargando] = useState(false);
-
-    // ...
-}
-```
-
-No convertir componentes legacy de clase solo porque se toque otra parte de la
-pantalla.
-
-#### Composición sobre componentes monolíticos
-
-Si una pantalla mezcla muchas responsabilidades visuales y la extracción aporta
-valor, separar por responsabilidades.
-
-```text
-PantallaConsulta
-├── FiltrosConsulta
-├── ResumenConsulta
-└── TablaResultados
-```
-
-La extracción debe responder a una necesidad real de legibilidad, reutilización
-o prueba; no imponer una estructura idéntica a todas las pantallas.
-
-#### Custom Hook para lógica reutilizable
-
-Cuando varias pantallas comparten una misma lógica de estado/efectos:
-
-```jsx
-function useTiposDeArchivo() {
-    const [tipos, setTipos] = useState([]);
-    const [estaCargando, setEstaCargando] = useState(false);
-    const [mensajeDeError, setMensajeDeError] = useState('');
-
-    // ...
-    return { tipos, estaCargando, mensajeDeError };
-}
-```
-
-No extraer un hook si solo encapsula una línea o si oculta el flujo sin
-reutilización ni mejora de prueba.
-
-#### Presentación y acceso HTTP
-
-El documento 1 propone una capa de servicios centralizada. En VES no es
-obligatorio crear un directorio de servicios: para nuevas llamadas usar
-`infraestructura/httpCliente.js` y conservar el ownership del estado cerca de
-la pantalla, salvo que ya exista un patrón compartido.
-
-**Evitar**
-
-```jsx
-axios.get('https://servidor-produccion/api/tipos');
-```
-
-**Recomendado**
-
-```jsx
-await httpCliente.get(apiListarTiposArchivo);
-```
-
-
-- Para componentes visuales nuevos, preferir Material UI v7, su tema existente
-  y el design system VES en `estilos/temaVes.js`.
-- Usar `useTemaVes()` y `veSTokens` cuando el componente necesite conocer el
-  tema o acceder a tokens directamente. Si un componente puede heredar el tema
-  MUI sin lógica condicional propia, preferir estilos del tema frente a
-  duplicar colores claro/oscuro.
-- La aplicación también conserva Bootstrap 5 en pantallas existentes. No
-  migrar esas pantallas como parte de una tarea ajena. Evitar mezclar estilos
-  competidores dentro de un mismo componente; combinar bibliotecas solo cuando
-  la integración sea necesaria y siga los estilos ya adoptados en esa zona.
-- No exigir que todo elemento visual sea un componente MUI: usar HTML semántico
-  (`main`, `nav`, `form`, `label`, botones y encabezados) donde corresponda.
-  Evitar elementos genéricos sin semántica cuando hay una alternativa adecuada.
-- Mantener el soporte claro/oscuro, los estados de foco visibles y el
-  comportamiento responsive de la pantalla al introducir o modificar estilos.
-- Respetar `prefers-reduced-motion` en animaciones nuevas y evitar depender
-  solamente del color para comunicar errores, selección o estado.
-
-Ejemplo con los tokens del tema VES:
-
-```jsx
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { useTemaVes } from '../estilos/ContextoDeTema';
-import { veSTokens } from '../estilos/temaVes';
-
-export default function ResumenDeOperacion({ titulo }) {
-    const { esOscuro } = useTemaVes();
-
-    return (
-        <Box
-            sx={{
-                p: 2,
-                color: esOscuro ? veSTokens.fgDark : veSTokens.neutral900,
-                backgroundColor: esOscuro ? veSTokens.surfaceDark : veSTokens.neutral50,
-            }}
-        >
-            <Typography variant="h6">{titulo}</Typography>
-        </Box>
-    );
-}
-```
-
-
-### Patrones de UI/UX adaptados a VES
-
-#### MUI para componentes visuales nuevos
-
-**Recomendado**
+**Recommended**
 
 ```jsx
 import Button from '@mui/material/Button';
@@ -587,226 +138,79 @@ import Stack from '@mui/material/Stack';
 </Stack>
 ```
 
-En una vista Bootstrap existente, mantener Bootstrap si migrarla no forma parte
-del alcance.
+In an existing Bootstrap view, retain Bootstrap unless migrating it is explicitly within scope.
 
-#### Estados visuales
+#### Visual States
 
-Todo control interactivo debe representar, según aplique:
+Each interactive control MUST represent the applicable states:
 
-- normal;
+- default;
 - hover;
-- focus visible;
+- visible focus;
 - disabled;
 - loading;
 - error;
 - selected/active.
 
-No comunicar un estado únicamente mediante color.
+DO NOT convey state through color alone.
 
-#### Responsive
+#### Responsive Design
 
-- Diseñar primero según el comportamiento de la pantalla existente.
-- Verificar al menos tamaños de móvil, tablet y escritorio relevantes.
-- Evitar anchos fijos innecesarios.
-- Preferir breakpoints/tokens del sistema visual existente.
-- Tablas/DataGrid deben mantener un comportamiento utilizable en viewport
-  reducido.
+- Design primarily around the existing screen's behavior.
+- Verify at least the relevant mobile, tablet, and desktop sizes.
+- Avoid unnecessary fixed widths.
+- Prefer the existing design system's breakpoints and tokens.
+- Tables and DataGrid components MUST remain usable in narrow viewports.
 
-#### Navegación
+#### Navigation
 
-Usar React Router y rutas existentes.
+Use React Router and the established routes.
 
-No usar:
+DO NOT use:
 
 ```jsx
 window.location.href = '/ruta-interna';
 ```
 
-cuando la navegación pertenece a la SPA y puede resolverse con React Router.
+when navigation occurs within the SPA and can be handled by React Router.
 
-Conservar navegación externa segura con las utilidades existentes.
+Preserve secure external navigation using existing utilities.
 
-#### Botonera común de acciones
+#### Shared Action Toolbar (`Botonera`)
 
-Las pantallas del VES **no crean botones de acción propios** (Abrir, Nuevo,
-Eliminar, Descargar…): usan la `Botonera` de `componentes/botones`, que consulta
-las opciones del usuario en la base de datos de seguridad
-(`usuario/opciones/ObtenerOpcionesUsuarioAsync`) y asocia cada `nombreFisico` con
-la función de la pantalla (`laListaDeLasFuncionesDeLosBotones`). La pantalla
-recibe `elUsuario`, `elCodigoDeModulo`, `elCodigoOpcionPadre` y `elTitulo` del
-`Dashboard`.
+VES screens **MUST NOT create their own action buttons** (Open, New, Delete, Download, etc.). They use the shared `Botonera` in `componentes/botones`, which queries the user's available options from the security database (`usuario/opciones/ObtenerOpcionesUsuarioAsync`) and maps each `nombreFisico` to the screen function (`laListaDeLasFuncionesDeLosBotones`). The screen receives `elUsuario`, `elCodigoDeModulo`, `elCodigoOpcionPadre`, and `elTitulo` from `Dashboard`.
 
-- Se muestran todas las opciones que el usuario tiene en la pantalla. Las que la
-  pantalla aún no implementa se pasan con `funcionOpcionNoImplementada` para
-  avisar «Opción no disponible aún»; sin esa propiedad se omiten.
-- Las acciones sobre un registro actúan sobre la fila seleccionada y avisan si no
-  hay selección.
-- No sustituir esta botonera por botones por fila ni por controles propios.
+- Display all options available to the user on that screen. For options not yet implemented by the screen, pass `funcionOpcionNoImplementada` to display the message “Option not yet available”; without that property, those options are omitted.
+- Record-level actions operate on the selected row and inform the user if no row is selected.
+- DO NOT replace the shared toolbar with per-row action buttons or custom controls.
 
-#### Previsualización de archivos
+#### File Preview
 
-- Solo PDF, con límite de tamaño y `Content-Type` validado; el blob se fuerza a
-  `application/pdf` y se libera su URL al desmontar.
-- No usar `sandbox` en el `iframe` del visor de PDF (Chrome lo bloquea con
-  `ERR_BLOCKED_BY_CLIENT`); usar `referrerPolicy="no-referrer"`.
-- Verificar el render visual en un navegador real (Edge/Chrome): el navegador
-  automatizado puede colgarse con el visor de PDF.
+- PDF only, with validated size limits and `Content-Type`; force the blob's MIME type to `application/pdf` and revoke its object URL on unmount.
+- DO NOT use `sandbox` on the PDF viewer's `iframe` (Chrome blocks it with `ERR_BLOCKED_BY_CLIENT`); use `referrerPolicy="no-referrer"`.
+- Verify rendering in a real browser (Edge/Chrome): automated browsers may hang when displaying the PDF viewer.
 
+## State, Effects, and Forms
 
-## Estado, efectos y formularios
+- Use `useState` for local state and lift it only when it must be shared. `ContextoDeTema` and `sesionLocal` cover existing cross-cutting concerns; DO NOT introduce a global state library for a local use case.
+- Use `useEffect` to synchronize with external systems, not as a general substitute for event handling or derived calculations. Declare accurate dependencies and clean up subscriptions, timers, and other resources.
+- Some legacy screens suppress dependencies using `eslint-disable-line react-hooks/exhaustive-deps`. DO NOT copy this pattern without a verified reason or mechanically alter those dependencies: first analyze the data flow and validate behavior.
+- Use controlled forms or `FormData` according to the component's established pattern. Validate inputs with understandable messages, retain values when an error occurs, and prevent duplicate submissions by disabling the action while saving.
+- Every visible asynchronous operation MUST represent its applicable loading, success, and error states. DO NOT turn failures into successful responses or conceal errors.
 
-- Usar `useState` para el estado local y elevarlo únicamente cuando deba ser
-  compartido. `ContextoDeTema` y `sesionLocal` cubren preocupaciones
-  transversales existentes; no introducir una biblioteca global de estado para
-  un caso local.
-- Usar `useEffect` para sincronización con sistemas externos, no como
-  sustituto general de eventos o cálculo derivado. Declarar dependencias
-  correctas y limpiar suscripciones, temporizadores y otros recursos.
-- Algunas pantallas heredadas omiten dependencias con
-  `eslint-disable-line react-hooks/exhaustive-deps`. No copiar ese patrón sin
-  una razón comprobada ni cambiar esas dependencias mecánicamente: analizar
-  primero el flujo de datos y validar el comportamiento.
-- Usar formularios controlados o `FormData` según el patrón del componente.
-  Validar entradas con mensajes comprensibles; conservar valores si ocurre un
-  error y evitar envíos duplicados deshabilitando la acción mientras se guarda.
-- Toda operación asíncrona visible debe representar sus estados de carga,
-  éxito y error que apliquen. No convertir errores en respuestas exitosas ni
-  ocultar fallos.
+### State and Effect Examples
 
+The rules and states remain in the preceding section. Complete examples of `useState`, derived state, `useEffect`, cleanup, forms, duplicate submission, and save errors: [frontend-examples.md](./frontend-examples.md#ejemplo-05).
 
-### Ejemplos de estado, efectos y formularios
+## API Communication
 
-> Se mantienen los principios de estado local, estados de carga/error, formularios controlados y
-> custom hooks. Se añaden reglas de React modernas para evitar efectos
-> innecesarios y actualizaciones obsoletas.
+- Use URLs and routes defined in `Constantes.js`; DO NOT duplicate environment URLs in components or hardcode local or production URLs.
+- All UI business requests MUST target `Bccr.Supen.Ves.Api`, respecting its versioned routes and conventions. NEVER connect the UI directly to MAPI, SQL Server, or stored procedures.
+- The project is gradually migrating its Axios calls to `infraestructura/httpCliente.js`. Use that client for new requests or when modifying already-migrated code; DO NOT replace all existing calls at once or change their contracts without a dedicated task.
+- `httpCliente` configures timeouts and a session interceptor; it also exports `ObtengaMensajeDeErrorHttp`. Reuse these capabilities as appropriate and preserve diagnostic error details.
+- Keep requests, loading, and errors close to the screen that owns their state unless the feature already has a clear shared pattern. Creating a new services directory or abstraction layer is not required.
 
-#### Estado local
-
-Usar `useState` para estado que pertenece al componente:
-
-```jsx
-const [estaCargando, setEstaCargando] = useState(false);
-const [mensajeDeError, setMensajeDeError] = useState('');
-```
-
-No elevar el estado a `App` o a un contexto si únicamente lo consume una
-pantalla.
-
-#### Estado derivado
-
-**Evitar guardar estado que puede calcularse**
-
-```jsx
-const [cantidad, setCantidad] = useState(0);
-
-useEffect(() => {
-    setCantidad(filas.length);
-}, [filas]);
-```
-
-**Recomendado**
-
-```jsx
-const cantidad = filas.length;
-```
-
-#### `useEffect`
-
-Usar `useEffect` para sincronizar con algo externo: red, DOM externo,
-suscripciones, timers o APIs del navegador.
-
-**Evitar**
-
-```jsx
-useEffect(() => {
-    setNombreCompleto(`${nombre} ${apellido}`);
-}, [nombre, apellido]);
-```
-
-**Recomendado**
-
-```jsx
-const nombreCompleto = `${nombre} ${apellido}`;
-```
-
-#### Limpieza de efectos
-
-```jsx
-useEffect(() => {
-    const controlador = new AbortController();
-
-    cargarDatos({ signal: controlador.signal });
-
-    return () => {
-        controlador.abort();
-    };
-}, []);
-```
-
-Usar el mecanismo de cancelación compatible con `httpCliente`/Axios y el código
-real de la zona; el ejemplo representa el patrón.
-
-#### Formularios controlados
-
-```jsx
-const [formulario, setFormulario] = useState({
-    codigoEntidad: '',
-    fechaInicio: '',
-});
-
-const alCambiar = (event) => {
-    const { name, value } = event.target;
-
-    setFormulario((anterior) => ({
-        ...anterior,
-        [name]: value,
-    }));
-};
-```
-
-#### Evitar doble envío
-
-```jsx
-<Button
-    type="submit"
-    disabled={estaGuardando}
->
-    {estaGuardando ? 'Guardando...' : 'Guardar'}
-</Button>
-```
-
-#### Error de guardado
-
-Ante un error:
-
-- conservar los datos que el usuario introdujo;
-- mostrar un mensaje comprensible;
-- restaurar el estado de interacción;
-- no mostrar éxito;
-- conservar detalles técnicos solo para diagnóstico, no en UI.
-
-
-## Comunicación con la API
-
-- Usar URLs y rutas definidas en `Constantes.js`; no duplicar URLs de ambiente
-  en componentes ni fijar una URL local o de producción.
-- Todas las llamadas de negocio de la UI deben dirigirse a
-  `Bccr.Supen.Ves.Api`, respetando sus rutas versionadas y convenciones. Nunca
-  conectar la UI directamente a MAPI, SQL Server o stored procedures.
-- El proyecto migra gradualmente sus llamadas Axios hacia
-  `infraestructura/httpCliente.js`. Usar ese cliente para nuevas llamadas o
-  al modificar una zona ya migrada; no reemplazar de una sola vez las llamadas
-  existentes ni cambiar sus contratos sin una tarea específica.
-- `httpCliente` configura timeout e interceptor de sesión; también exporta
-  `ObtengaMensajeDeErrorHttp`. Reutilizar estas capacidades donde corresponda
-  y conservar los datos útiles del error para diagnóstico.
-- Mantener solicitudes, loading y error cerca de la pantalla que posee su
-  estado, a menos que la funcionalidad ya tenga un patrón compartido claro.
-  No es requisito crear un directorio o una capa de servicios nueva.
-
-Ejemplo de solicitud de UI usando el cliente compartido y una URL de
-configuración existente:
+Example UI request using the shared client and an existing configured URL:
 
 ```jsx
 import { useState } from 'react';
@@ -844,179 +248,30 @@ export default function ConsultarTiposDeArchivo() {
 }
 ```
 
+### HTTP Communication Examples
 
-### Patrones de comunicación HTTP
+The configuration, shared-client, contract, error-handling, and state rules remain above. Full examples of network errors, concurrency, stale responses, and caching: [frontend-examples.md](./frontend-examples.md#ejemplo-06).
 
-> Se conserva la centralización de configuración HTTP y manejo consistente de errores, 
-> pero se adapta al cliente compartido existente de VES.
+## Accessibility and Usability
 
-#### No duplicar configuración
+- Use semantic elements and associate each form control with an accessible label.
+- Provide accessible names for icon buttons, useful alternative text for informative images, and `alt=""` for decorative images.
+- Preserve keyboard navigation, visible focus, logical focus order, and sufficient contrast. Follow the WCAG 2.1 AA accessibility target documented for VES.
+- Announce errors and dynamic results using appropriate semantics (for example, `role="alert"` for urgent messages). DO NOT convey status through color alone.
+- Preserve the application's and business domain's Spanish language. DO NOT introduce i18n or translate UI labels as part of unrelated work; remain consistent with the module's existing copy and terminology.
 
-**Evitar**
+### Accessibility Examples
 
-```jsx
-const respuesta = await axios.get(
-    'http://localhost:5000/api/tipos-archivo'
-);
-```
+The standard remains above. Examples of icon buttons, semantics, forms, messages, and images: [frontend-examples.md](./frontend-examples.md#ejemplo-07).
 
-**Recomendado**
+## Testing and Quality
 
-```jsx
-const respuesta = await httpCliente.get(apiListarTiposArchivo);
-```
-
-#### Error de red
-
-```jsx
-try {
-    const respuesta = await httpCliente.get(apiListarTiposArchivo);
-    setTipos(respuesta.data);
-} catch (error) {
-    setMensajeDeError(ObtengaMensajeDeErrorHttp(error));
-}
-```
-
-No mostrar `error.stack`, respuesta completa, tokens ni detalles internos al
-usuario.
-
-#### Solicitudes concurrentes
-
-Cuando dos solicitudes sean independientes y el endpoint/UX lo justifique,
-pueden ejecutarse en paralelo:
-
-```jsx
-const [catalogos, parametros] = await Promise.all([
-    httpCliente.get(apiCatalogos),
-    httpCliente.get(apiParametros),
-]);
-```
-
-No usar `Promise.all` si una solicitud depende del resultado de la otra o si el
-flujo requiere tratamiento independiente de errores.
-
-#### Datos obsoletos
-
-Si una búsqueda puede cambiar rápidamente de criterios, cancelar la solicitud
-anterior o ignorar su resultado cuando ya no corresponda al criterio actual.
-
-#### Caché
-
-El documento 1 recomienda cachear respuestas cuando sea apropiado. En VES no se
-debe introducir una biblioteca de caché global solo por esa recomendación.
-Definir explícitamente:
-
-- qué dato puede quedar obsoleto;
-- cuánto tiempo es válido;
-- cómo se invalida;
-- si contiene información sensible o dependiente de permisos.
-
-
-## Accesibilidad y usabilidad
-
-- Usar etiquetas semánticas y asociar cada control de formulario con una
-  etiqueta accesible.
-- Proporcionar nombre accesible a botones de icono, texto alternativo útil a
-  imágenes informativas y `alt=""` a imágenes decorativas.
-- Mantener navegación por teclado, foco visible, orden de foco lógico y
-  contraste suficiente. Seguir el objetivo de accesibilidad WCAG 2.1 AA
-  documentado para VES.
-- Anunciar errores y resultados dinámicos con semántica apropiada (por ejemplo
-  `role="alert"` en mensajes urgentes). No comunicar estado solo por color.
-- Conservar el idioma español de la aplicación y del negocio. No incorporar
-  i18n ni traducir etiquetas como parte de una tarea no relacionada; mantener
-  consistencia con los textos y términos del módulo.
-
-
-### Ejemplos de accesibilidad
-
-> Se conservan HTML semántico, teclado, texto alternativo y nombres accesibles. En VES se aplica
-> además el objetivo WCAG 2.1 AA documentado por el proyecto.
-
-#### Botón de icono
-
-**Evitar**
-
-```jsx
-<IconButton onClick={alEliminar}>
-    <DeleteIcon />
-</IconButton>
-```
-
-**Recomendado**
-
-```jsx
-<IconButton
-    aria-label="Eliminar archivo"
-    onClick={alEliminar}
->
-    <DeleteIcon />
-</IconButton>
-```
-
-#### Clickable `div`
-
-**Evitar**
-
-```jsx
-<div onClick={alConsultar}>Consultar</div>
-```
-
-**Recomendado**
-
-```jsx
-<Button onClick={alConsultar}>Consultar</Button>
-```
-
-Usar el elemento semántico correcto evita tener que recrear manualmente
-comportamiento de teclado, foco y roles.
-
-#### Formularios
-
-Cada control debe tener un nombre accesible mediante `label`, propiedad MUI
-equivalente o `aria-label` cuando no exista etiqueta visible adecuada.
-
-#### Mensajes dinámicos
-
-Para errores urgentes:
-
-```jsx
-<Alert severity="error" role="alert">
-    {mensajeDeError}
-</Alert>
-```
-
-No abusar de `role="alert"` para mensajes informativos no urgentes.
-
-#### Imágenes
-
-```jsx
-<img src={grafico} alt="Distribución mensual de operaciones" />
-<img src={decoracion} alt="" />
-```
-
-El `alt` debe describir propósito, no repetir “imagen de”.
-
-
-## Pruebas y calidad
-
-- El runner es Vitest con `globals: true`, configuración en
-  `vite.config.mjs` y entorno `jsdom`. Las pruebas usan React Testing Library.
-- Ubicar las pruebas junto a la funcionalidad con sufijos `.test.js` o
-  `.test.jsx`, siguiendo el patrón de la carpeta (`STI`, `SEC`,
-  `componentes`, `infraestructura`, `estilos`, `rutas`).
-- Preferir consultas accesibles de Testing Library (`getByRole`,
-  `getByLabelText`, `findBy...`) y comprobar el comportamiento observable.
-  Usar selectores `data-testid` solo cuando no haya una consulta semántica
-  adecuada.
-- Cubrir comportamientos relevantes: casos exitosos, validación, errores,
-  estados de carga y casos límite según aplique. No añadir pruebas de
-  integración con Cypress o Jest: no forman parte del stack actual.
-- `describe`, `test`, `expect` y `beforeEach` están disponibles globalmente.
-  Los mocks y espías se importan de `vitest` (`vi.mock`, `vi.fn`,
-  `vi.clearAllMocks`); no usar `jest.*`.
-- Antes de finalizar cambios de código de UI, ejecutar desde
-  `Bccr.Supen.Ves.UI/Codigo/`:
+- The test runner is Vitest with `globals: true`, configured in `vite.config.mjs` with the `jsdom` environment. Tests use React Testing Library.
+- Locate tests alongside the feature using `.test.js` or `.test.jsx` suffixes, following the folder's conventions (`STI`, `SEC`, `componentes`, `infraestructura`, `estilos`, `rutas`).
+- Prefer accessible Testing Library queries (`getByRole`, `getByLabelText`, `findBy...`) and assert observable behavior. Use `data-testid` selectors only when no suitable semantic query exists.
+- Cover relevant behavior: successful scenarios, validation, errors, loading states, and edge cases as appropriate. DO NOT add Cypress or Jest integration tests: these tools are not part of the current stack.
+- `describe`, `test`, `expect`, and `beforeEach` are globally available. Import mocks and spies from `vitest` (`vi.mock`, `vi.fn`, `vi.clearAllMocks`); DO NOT use `jest.*`.
+- Before completing UI source-code changes, run the following commands from `Bccr.Supen.Ves.UI/Codigo/`:
 
 ```bash
 npm run lint
@@ -1024,431 +279,122 @@ npm test
 npm run build:local
 ```
 
-No ejecutar `build:pruebas` ni `build:produccion` solo como validación local:
-esos scripts incrementan la versión en `package.json`.
+DO NOT run `build:pruebas` or `build:produccion` solely for local verification: those scripts increment the version in `package.json`.
 
+### Vitest Testing Examples
 
-### Patrones de escritura de pruebas
+Rules and exceptions remain in this section. Complete examples of AAA, RTL, mocks, coverage, and anti-patterns: [frontend-examples.md](./frontend-examples.md#ejemplo-08).
 
-> Se conserva la filosofía de probar flujos y comportamiento, nombres descriptivos, casos de
-> éxito/error/límite y aislamiento. Jest/Cypress se transforman al stack real:
-> Vitest + React Testing Library.
+## Configuration, Security, and Browser Boundaries
 
-#### Nombre de pruebas
+- Environment-specific configuration resides in `Codigo/config/{ambiente}.json` and is merged with `config/default.json`. `NODE_CONFIG_ENV` selects the configuration during Vite build/dev; `vite.config.mjs` exposes it as `__APP_CONFIG__`. Consult `VES/Bccr.Supen.Ves.UI/Documentacion/Deploy.md` before making changes.
+- DO NOT use `Constantes.js` to hardcode an environment or replace its configuration mechanism. Values included in the browser bundle are public: NEVER put secrets, private keys, or credentials in client configuration.
+- DO NOT add secrets to `Codigo/.env`; the inherited `ENCRYPTION_KEY` value is documented as awaiting secure handling and MUST NOT be replicated.
+- For external links, preserve validation and secure opening (`noopener,noreferrer`) according to the patterns in `EnlacesExternos.js` and `Dashboard.jsx`. DO NOT construct trusted destinations from unvalidated input.
+- Avoid persisting tokens or sensitive information in `localStorage`. Respect the GAUDI/OpenID authentication and session flows implemented in `Autenticacion.jsx`, `LandingGaudi.jsx`, and `infraestructura/`.
 
-Preferir nombres orientados al comportamiento:
+### Browser Security Examples
 
-```jsx
-test('muestra los tipos de archivo cuando la consulta es exitosa', async () => {
-    // ...
-});
+The environment-configuration and no-secrets-in-the-bundle rules remain above. Complete examples of dynamic HTML, external URLs, `localStorage`, and configuration: [frontend-examples.md](./frontend-examples.md#ejemplo-09).
 
-test('muestra un mensaje de error cuando falla la consulta', async () => {
-    // ...
-});
-```
+## Performance and Maintenance
 
-Evitar:
+- Measure before optimizing. Avoid preventable re-renders, but DO NOT add `memo`, `useMemo`, or `useCallback` without demonstrated need.
+- Preserve the existing code-splitting and chunk configuration in `vite.config.mjs`. Consider lazy-loading large modules/screens when it offers measurable improvement and is compatible with navigation and deployment.
+- Use `loading="lazy"` for noncritical images when appropriate; preserve specialized handling of large file uploads and downloads.
+- Maintain stable list keys and cancel or ignore stale asynchronous results when a screen can unmount or its query criteria change.
+- DO NOT refactor STI/SEC views, modify business logic, update dependencies, or alter API contracts as side effects of a visual improvement.
 
-```jsx
-test('test1', () => {});
-test('componente funciona', () => {});
-```
+### Performance Examples
 
-#### Arrange / Act / Assert
+The measurement and maintenance rules remain above. Examples of `useMemo`, lists, lazy loading, images, and APIs: [frontend-examples.md](./frontend-examples.md#ejemplo-10).
 
-El patrón AAA puede usarse para organizar pruebas no triviales:
+## Workflow
 
-```jsx
-test('deshabilita Consultar mientras la solicitud está en curso', async () => {
-    // Arrange
-    // configurar mock y renderizar
+- First analyze the target screen's conventions and adjacent components.
+- Make small, related changes; DO NOT assume generic advice overrides business requirements or established VES conventions.
+- Follow the branching and review workflow in `Bccr.Supen.Ves.UI/AGENT.md`.
+- Keep README, SPEC, and development guides aligned with actual behavior when architecture, tooling, or procedures change.
 
-    // Act
-    // ejecutar acción de usuario
+## Quick Checklist for New Frontend Code
 
-    // Assert
-    // verificar comportamiento observable
-});
-```
+### Architecture and API
 
-No es obligatorio escribir los comentarios si el test ya es claro.
+- [ ] The UI calls only `Bccr.Supen.Ves.Api`.
+- [ ] No direct calls to MAPI, SQL Server, or stored procedures.
+- [ ] URLs/routes come from `Constantes.js` or existing configuration.
+- [ ] New requests use `httpCliente` where appropriate.
+- [ ] No unnecessary new layer or abstraction has been introduced.
 
-#### Consultas semánticas
+### Naming and Structure
 
-**Preferir**
-
-```jsx
-screen.getByRole('button', { name: /consultar/i });
-screen.getByLabelText(/código de entidad/i);
-await screen.findByRole('alert');
-```
-
-**Evitar como primera opción**
-
-```jsx
-screen.getByTestId('btn-consultar');
-```
-
-`data-testid` es válido cuando no existe una consulta semántica estable.
-
-#### Interacción del usuario
-
-Usar las utilidades de interacción ya instaladas/configuradas en la suite. Si
-`user-event` está disponible, preferir interacción cercana al comportamiento
-real sobre disparar eventos de bajo nivel manualmente.
-
-#### Mock de HTTP con Vitest
-
-Usar `vi.mock`, `vi.fn`, `vi.spyOn` según el patrón existente.
-
-```jsx
-import { vi } from 'vitest';
-
-vi.mock('../infraestructura/httpCliente', () => ({
-    default: {
-        get: vi.fn(),
-    },
-    ObtengaMensajeDeErrorHttp: vi.fn(),
-}));
-```
-
-No usar:
-
-```jsx
-jest.mock(...)
-jest.fn()
-```
-
-#### Qué probar
-
-Según aplique:
-
-1. render inicial;
-2. loading;
-3. resultado exitoso;
-4. error;
-5. validación;
-6. estado vacío;
-7. botones disabled/enabled;
-8. navegación;
-9. accesibilidad básica;
-10. actualización por interacción del usuario;
-11. caso límite relevante.
-
-No todos los componentes requieren todos los casos.
-
-#### Qué no probar
-
-- detalles internos de hooks o estado si no son observables;
-- nombres de funciones privadas;
-- estructura exacta del árbol DOM si no forma parte del contrato;
-- clases MUI generadas dinámicamente;
-- implementación interna de React.
-
-#### Ejemplo completo
-
-```jsx
-test('muestra error y conserva la acción disponible cuando falla la consulta', async () => {
-    httpCliente.get.mockRejectedValueOnce(new Error('fallo'));
-    ObtengaMensajeDeErrorHttp.mockReturnValueOnce(
-        'No fue posible realizar la consulta.'
-    );
-
-    render(<ConsultarTiposDeArchivo />);
-
-    await user.click(
-        screen.getByRole('button', { name: /consultar/i })
-    );
-
-    expect(
-        await screen.findByRole('alert')
-    ).toHaveTextContent('No fue posible realizar la consulta.');
-
-    expect(
-        screen.getByRole('button', { name: /consultar/i })
-    ).toBeEnabled();
-});
-```
-
-Ajustar imports y helpers a la configuración real de la suite.
-
-#### Anti-patrones de pruebas
-
-- usar `jest.*`;
-- depender de una API o red real en unit/component tests;
-- usar timeouts/sleeps arbitrarios;
-- probar detalles privados;
-- usar `data-testid` cuando existe un rol/label accesible;
-- compartir estado mutable entre tests;
-- depender del orden de ejecución;
-- ocultar un fallo dentro de `try/catch`;
-- perseguir cobertura numérica sin validar comportamiento.
-
-#### Cobertura
-
-No imponer un porcentaje proveniente de otro proyecto si el pipeline VES no lo
-define. Priorizar escenarios significativos y respetar los umbrales/Quality
-Gate efectivos del repositorio.
-
-## Configuración, seguridad y límites del navegador
-
-- La configuración por ambiente vive en `Codigo/config/{ambiente}.json` y se
-  fusiona con `config/default.json`. `NODE_CONFIG_ENV` selecciona la
-  configuración durante Vite build/dev; `vite.config.mjs` la expone como
-  `__APP_CONFIG__`. Consultar `..\VES\Bccr.Supen.Ves.UI\Documentacion\Deploy.md` antes de modificarla.
-- No usar `Constantes.js` para fijar un ambiente ni cambiar su mecanismo de
-  configuración. Los valores que llegan al bundle del navegador son públicos:
-  nunca colocar secretos, claves privadas o credenciales en la configuración
-  del cliente.
-- No agregar secretos a `Codigo/.env`; el valor heredado `ENCRYPTION_KEY` está
-  documentado como pendiente de gestión segura y no debe replicarse.
-- Para enlaces externos, conservar validación y apertura segura
-  (`noopener,noreferrer`) según el patrón de `EnlacesExternos.js` y
-  `Dashboard.jsx`. No formar destinos confiando sin validación en entradas
-  recibidas.
-- Evitar persistir tokens o datos sensibles en `localStorage`. Respetar los
-  flujos de autenticación GAUDI/OpenID y de sesión implementados en
-  `Autenticacion.jsx`, `LandingGaudi.jsx` y `infraestructura/`.
-
-
-### Ejemplos de configuración y seguridad del cliente
-
->  Se conserva la separación de configuración por ambiente y la prohibición de secretos en el
-> cliente. La implementación se adapta al mecanismo `config/*.json` + Vite de
-> VES, no a `.env` o Create React App.
-
-#### Configuración
-
-**Evitar**
-
-```jsx
-const API_URL = 'https://api-produccion/';
-```
-
-dentro de un componente.
-
-**Recomendado**
-
-Consumir las constantes/configuración ya expuestas por el mecanismo VES.
-
-#### Los secretos no existen en frontend
-
-Todo valor incluido en el bundle puede ser inspeccionado por el usuario.
-Nunca colocar allí:
-
-- contraseñas;
-- client secrets;
-- private keys;
-- connection strings;
-- tokens permanentes.
-
-#### HTML dinámico
-
-Evitar `dangerouslySetInnerHTML` salvo necesidad real y contenido confiable o
-sanitizado mediante el mecanismo aprobado por el proyecto.
-
-#### URLs externas
-
-No construir destinos externos directamente desde entradas no confiables.
-Reutilizar validación y apertura segura existente (`noopener,noreferrer`).
-
-#### Persistencia del navegador
-
-No persistir tokens, claims sensibles o información confidencial adicional en
-`localStorage` por conveniencia. Seguir el flujo de sesión/autenticación ya
-implementado.
-
-
-## Rendimiento y mantenimiento
-
-- Medir antes de optimizar. Evitar re-renderizados evitables, pero no agregar
-  `memo`, `useMemo` o `useCallback` sin necesidad demostrada.
-- Mantener el splitting y la configuración de chunks existente en
-  `vite.config.mjs`. Considerar carga diferida para módulos/pantallas grandes
-  cuando aporte una mejora medible y sea compatible con navegación y
-  despliegue.
-- Usar `loading="lazy"` para imágenes no críticas cuando sea apropiado;
-  conservar el manejo específico de cargas y descargas de archivos grandes.
-- Mantener claves estables para listas y cancelar o ignorar resultados
-  asíncronos obsoletos cuando una pantalla pueda desmontarse o cambiar sus
-  criterios de consulta.
-- No refactorizar vistas STI/SEC, cambiar lógica de negocio, actualizar
-  dependencias ni alterar contratos del API como efectos secundarios de una
-  mejora visual.
-
-
-### Patrones de rendimiento
-
-> Se conservan lazy loading, code splitting, optimización de assets, reducción de renders y
-> eficiencia HTTP, pero solo cuando exista beneficio medible.
-
-#### `useMemo` y `useCallback`
-
-**Evitar optimización preventiva**
-
-```jsx
-const titulo = useMemo(() => 'Consulta', []);
-```
-
-```jsx
-const alCerrar = useCallback(() => {
-    setAbierto(false);
-}, []);
-```
-
-si no existe una razón medible o una dependencia que requiera identidad estable.
-
-**Usar cuando corresponda**, por ejemplo, un cálculo costoso derivado de datos
-grandes:
-
-```jsx
-const filasOrdenadas = useMemo(
-    () => ordenarFilas(filas, criterio),
-    [filas, criterio]
-);
-```
-
-#### Claves de listas
-
-**Evitar**
-
-```jsx
-filas.map((fila, indice) => (
-    <Fila key={indice} fila={fila} />
-));
-```
-
-cuando exista un identificador estable.
-
-**Recomendado**
-
-```jsx
-filas.map((fila) => (
-    <Fila key={fila.id} fila={fila} />
-));
-```
-
-#### Lazy loading
-
-Considerar `React.lazy`/splitting para pantallas grandes que no se necesiten en
-el arranque, sin alterar la estrategia existente de chunks ni navegación.
-
-#### Imágenes
-
-Para imágenes no críticas:
-
-```jsx
-<img
-    src={miniatura}
-    alt="..."
-    loading="lazy"
-/>
-```
-
-No aplicar lazy loading a recursos necesarios para el contenido inicial si
-perjudica UX.
-
-#### API
-
-- no repetir la misma solicitud innecesariamente;
-- evitar pedir datos que la pantalla no necesita si el API permite filtrado;
-- cancelar/ignorar respuestas obsoletas;
-- paralelizar solo solicitudes independientes;
-- no introducir caching global sin estrategia de expiración/invalidez.
-
-
-## Flujo de trabajo
-
-- Analizar primero las convenciones de la pantalla y sus componentes vecinos.
-- Hacer cambios pequeños y relacionados; no asumir que una recomendación
-  genérica prevalece sobre los requisitos del negocio o las convenciones
-  vigentes de VES.
-- Seguir el flujo de ramas y revisión descrito en `Bccr.Supen.Ves.UI/AGENT.md`.
-- Mantener README, SPEC y guías de desarrollo alineados con el comportamiento
-  real cuando cambien arquitectura, herramientas o procesos.
-
-## Checklist rápido para código frontend nuevo
-
-### Arquitectura y API
-
-- [ ] La UI consume únicamente `Bccr.Supen.Ves.Api`.
-- [ ] No hay llamadas directas a MAPI, SQL Server o stored procedures.
-- [ ] URLs/rutas se obtienen de `Constantes.js` o configuración existente.
-- [ ] Nuevas llamadas usan `httpCliente` cuando corresponde.
-- [ ] No se creó una nueva capa/abstracción sin necesidad.
-
-### Nombres y estructura
-
-- [ ] Componentes en `PascalCase`.
-- [ ] Variables y funciones en `camelCase`.
-- [ ] Hooks comienzan con `use`.
-- [ ] Booleanos tienen nombres descriptivos.
-- [ ] Archivos `.jsx` contienen JSX y `.js` lógica sin JSX.
-- [ ] CSS propio usa `kebab-case`.
-- [ ] No se renombraron contratos públicos por estilo.
-- [ ] Idioma coherente con el módulo.
+- [ ] Components use `PascalCase`.
+- [ ] Variables and functions use `camelCase`.
+- [ ] Hooks begin with `use`.
+- [ ] Booleans have descriptive names.
+- [ ] `.jsx` files contain JSX, and `.js` files contain non-JSX logic.
+- [ ] Custom CSS uses `kebab-case`.
+- [ ] Public contracts were not renamed for stylistic reasons.
+- [ ] Language is consistent with the module.
 
 ### React
 
-- [ ] Componente funcional para código nuevo.
-- [ ] Props claras/desestructuradas cuando aporta legibilidad.
-- [ ] Estado mantenido lo más local posible.
-- [ ] No hay estado derivado innecesario.
-- [ ] `useEffect` se usa para sincronización real, no para cálculos simples.
-- [ ] Efectos limpian recursos cuando corresponde.
-- [ ] Listas usan `key` estable.
+- [ ] New code uses functional components.
+- [ ] Props are clear/destructured when this improves readability.
+- [ ] State remains as local as possible.
+- [ ] No unnecessary derived state.
+- [ ] `useEffect` is used for actual synchronization, not simple calculations.
+- [ ] Effects clean up resources when appropriate.
+- [ ] Lists use stable `key` values.
 
 ### UI/UX
 
-- [ ] Nuevos componentes visuales usan MUI/tema VES cuando corresponde.
-- [ ] Se conserva claro/oscuro.
-- [ ] Responsive verificado.
-- [ ] Loading/error/empty/success representados cuando aplican.
-- [ ] No hay estado comunicado solo por color.
-- [ ] Acciones async evitan doble envío.
+- [ ] New visual components use MUI/VES theme where appropriate.
+- [ ] Light/dark mode is preserved.
+- [ ] Responsive behavior has been verified.
+- [ ] Loading/error/empty/success states are represented where applicable.
+- [ ] No state is conveyed through color alone.
+- [ ] Asynchronous actions prevent duplicate submissions.
 
-### Accesibilidad
+### Accessibility
 
-- [ ] HTML semántico.
-- [ ] Controles con nombre accesible.
-- [ ] Navegación por teclado.
-- [ ] Foco visible.
-- [ ] Imágenes con `alt` correcto.
-- [ ] Errores dinámicos anunciados apropiadamente.
-- [ ] Contraste suficiente.
+- [ ] Semantic HTML.
+- [ ] Controls have accessible names.
+- [ ] Keyboard navigation works.
+- [ ] Focus is visible.
+- [ ] Images have appropriate `alt` text.
+- [ ] Dynamic errors are announced appropriately.
+- [ ] Contrast is sufficient.
 
-### Seguridad
+### Security
 
-- [ ] Sin secretos en código/config del bundle.
-- [ ] Sin tokens sensibles nuevos en `localStorage`.
-- [ ] Enlaces externos validados y abiertos de forma segura.
-- [ ] No se usa `dangerouslySetInnerHTML` sin justificación/sanitización.
-- [ ] Errores visibles no exponen detalles internos.
+- [ ] No secrets in code or browser-bundle configuration.
+- [ ] No new sensitive tokens in `localStorage`.
+- [ ] External links are validated and opened securely.
+- [ ] No `dangerouslySetInnerHTML` without justification/sanitization.
+- [ ] User-facing errors do not expose internal details.
 
-### Pruebas
+### Testing
 
 - [ ] Vitest + React Testing Library.
-- [ ] Consultas semánticas antes de `data-testid`.
-- [ ] Pruebas centradas en comportamiento.
-- [ ] Éxito/error/loading/validación cubiertos según riesgo.
-- [ ] Sin Jest/Cypress nuevos.
-- [ ] Sin llamadas reales a red en unit/component tests.
+- [ ] Semantic queries preferred over `data-testid`.
+- [ ] Tests focus on behavior.
+- [ ] Success/error/loading/validation cases covered based on risk.
+- [ ] No new Jest/Cypress dependencies.
+- [ ] No real network requests in unit/component tests.
 
-### Rendimiento
+### Performance
 
-- [ ] No hay `useMemo`/`useCallback` preventivos.
-- [ ] No hay solicitudes HTTP duplicadas innecesariamente.
-- [ ] Respuestas obsoletas se cancelan/ignoran cuando aplica.
-- [ ] Imágenes/assets se optimizan cuando aporta valor.
-- [ ] No se cambió splitting/chunks sin medición.
+- [ ] No speculative `useMemo`/`useCallback`.
+- [ ] No unnecessary duplicate HTTP requests.
+- [ ] Stale responses are canceled/ignored when applicable.
+- [ ] Images/assets optimized when beneficial.
+- [ ] No code-splitting/chunk changes without measurement.
 
-### Antes de Pull Request
+### Before Pull Request
 
 - [ ] `npm run lint`
 - [ ] `npm test`
 - [ ] `npm run build:local`
-- [ ] No se ejecutaron builds que incrementan versión solo para validar local.
-- [ ] No hay cambios colaterales de dependencias, contratos o módulos no
-      relacionados.
-
+- [ ] No version-incrementing builds were run solely for local validation.
+- [ ] No collateral changes to dependencies, contracts, or unrelated modules.

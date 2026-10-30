@@ -1,3 +1,9 @@
+# Referencia histórica — Backend legado VES
+
+> **ARCHIVADO (A):** el contenido que sigue describe la solución ASP.NET Web Forms/VB.NET/SOAP anterior. **No es una norma activa** para desarrollar `Bccr.Supen.Ves.Api` o `Bccr.Supen.Ves.Mapi` en .NET 8. Se conserva sin cambios de fondo para migración/compatibilidad. El original íntegro también está en `originales_sin_modificar/backend-guidelines(1).md`.
+
+---
+
 # Guía de backend para VES
 
 ## Alcance

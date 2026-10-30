@@ -20,8 +20,8 @@ alwaysApply: true
 |---|---|---|
 | English-only documentation | Consistency | Preserve the language of the owning document/module; Spanish is valid and prevalent |
 | Review docs before commit/push | Prevent stale docs | Retained; inspect the relevant change and affected documentation |
-| Data change → `data-model.md` | Keep data documentation aligned | Use MAPI `Documentacion/SCHEMA.md`, DA models/contexts and DBA-owned evidence |
-| API change → `api-spec.yml` | Keep API contracts aligned | Update actual API/MAPI endpoint guides, contracts and consumers; inherited LTI YAML is not authoritative |
+| Data change → `data-model.md` | Keep data documentation aligned | For API/MAPI DTO contracts use `docs/data-model.md`; for SQL tables, procedures and database evidence use MAPI `Documentacion/SCHEMA.md` and DBA ownership |
+| API change → `api-spec.yml` | Keep API contracts aligned | Keep VES `docs/api-spec.yml` aligned as a representative OpenAPI reference, in addition to actual controllers, API/MAPI contracts, gateway and consumers; verify runtime facts before claiming coverage |
 | Setup/dependency changes → standards | Keep developer instructions current | Update the actual README/Development/Deploy/standards owner |
 | Report updated files | Traceability | Retained and expanded with verification and uncertainty reporting |
 | Learn from user feedback | Improve agent/team rules | Retained with scope control; one interaction does not automatically create permanent policy |
@@ -41,6 +41,13 @@ This hierarchy does **not** mean source code proves production state. Deployment
 configuration, runtime behavior, database contents and environment-specific
 settings may require separate verification.
 
+## Consolidation note (2026-10-28)
+
+The review below retains its original 2026-10-05 provenance. In a later editorial
+consolidation, `docs/data-model.md`, `docs/api-spec.yml` and `docs/development_guide.md`
+were included with explicit VES scopes. This change does **not** verify runtime
+behavior, deployment configuration, OpenAPI completeness or the live SQL schema.
+
 ## Scope and review result
 
 Reviewed on **2026-10-05** against `VES/docs`, the three BCCR applications' documentation, and the source/configuration supporting the architectural findings. Paths below are relative to `VES/` unless stated otherwise; frontmatter globs use the containing workspace root.
@@ -54,8 +61,8 @@ Technical documentation explains how the software is structured, configured, use
 | Previous rule or assumption | Finding and applicable correction |
 |---|---|
 | Always write all documentation and code comments in English | BCCR README files, `AGENT.md`, guides and domain code use Spanish extensively. Preserve the affected document's language and the module's conventions; Spanish documentation is valid. This shared standards file remains in English for continuity. |
-| Update `docs/data-model.md` for every data change | That file currently describes LTI recruitment entities. VES database documentation exists in MAPI `Documentacion/SCHEMA.md`, alongside DA models, contexts and procedure calls. Check these sources and document uncertainties rather than adding VES entities to an unrelated model. |
-| Update `docs/api-spec.yml` for every endpoint change | The current YAML describes LTI candidate/position endpoints. Derive VES contracts from API/MAPI controllers, DTOs, gateway configuration and UI consumers. The LTI file must be explicitly replaced/re-scoped before serving as a VES contract. |
+| Update `docs/data-model.md` for every data change | `docs/data-model.md` now documents VES API/MAPI DTOs and transfer contracts, not a physical SQL schema. Update it when those contracts change; for DA, SQL objects and stored procedures use MAPI `Documentacion/SCHEMA.md` and DBA evidence. Do not treat historical Web Forms conceptual models as current SQL structure. |
+| Update `docs/api-spec.yml` for every endpoint change | The supplied `docs/api-spec.yml` now describes representative endpoints of VES API. This is a documented contract proposal/reference, not independent proof that the routes and security behavior match the current implementation. Verify affected API controllers, DTOs, gateway configuration, MAPI counterparts and UI consumers before updating its definitions or verification status. |
 | One general set of setup and architecture documents | There are two independent .NET solutions and one UI package, each with its own README, agent guide and `Documentacion/` directory. Shared standards live in `VES/docs`. |
 | Documentation statements can be repeated as current facts | Local BCCR guides also contain stale claims. Record the source/date and verify claims against project files and code; repository evidence alone does not establish production settings or database state. |
 | Every interaction should trigger rule refinement | Feedback is useful input, but a one-off task does not necessarily establish a permanent team policy. Analyze relevant feedback and limit changes to supported, authorized scope. |
@@ -137,8 +144,10 @@ Use [base standards](./base-standards.md), [backend standards](./backend-standar
 |---|---|---|
 | Shared VES conventions | `docs/base-standards.md`, `backend-standards.md`, `frontend-standards.md`, this file | Cross-application boundaries, conventions and the status of inherited documents. |
 | API setup and endpoint development | [API README](../VES/Bccr.Supen.Ves.Api/README.md), [endpoint guide](../VES/Bccr.Supen.Ves.Api/Documentacion/ComoCrearUnNuevoEndpoint.md); controllers, SG and API abstractions | Actual routes/verbs/versioning, request/response DTOs, gateway configuration, tests and setup prerequisites. |
+| API HTTP reference contract | [VES OpenAPI](./api-spec.yml); actual API controllers/DTOs, `SI.SG`, MAPI counterpart | Update affected operations, shapes, security descriptions and verification flags only with traceable evidence. OpenAPI is representative, not exhaustive. |
 | API delivery | [API Deploy.md](../VES/Bccr.Supen.Ves.Api/Documentacion/Deploy.md); startup/program configuration and pipeline files | Configuration keys, certificate behavior, provider order and deployment prerequisites, with environment assumptions made explicit. |
 | MAPI business and endpoints | [MAPI README](../VES/Bccr.Supen.Ves.Mapi/README.md), [MAPI implementation guide](../VES/Bccr.Supen.Ves.Mapi/Documentacion/ComoImplementarUnMAPI.md); MAPI/BW/DA and abstractions | Business behavior, DA mappings, stored procedure expectations and relevant tests. |
+| API/MAPI data contracts (DTOs) | [VES data-model.md](./data-model.md); API and MAPI `Abstracciones` classes | Fields, types, nullability and consumers; verify serialization in both services and the UI. The separate abstraction projects are not a single shared assembly. |
 | Database structure | [MAPI SCHEMA.md](../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md); DA models/contexts/commands | Affected procedure parameters, result mappings, connection keys and schema expectations. Separate application expectations from a verified database inventory. |
 | MAPI operational checks and releases | [environment verification guide](../VES/Bccr.Supen.Ves.Mapi/Documentacion/VerificacionEntorno.md), [release notes](../VES/Bccr.Supen.Ves.Mapi/Documentacion/release_notes.md) | Relevant health-check behavior, prerequisites, release changes and actual verification results. |
 | UI development and usability | [UI README](../VES/Bccr.Supen.Ves.UI/README.md), [development guide](../VES/Bccr.Supen.Ves.UI/Documentacion/DEVELOPMENT.md), [usability notes](../VES/Bccr.Supen.Ves.UI/Documentacion/USABILIDAD.md) | SEC/STI workflows, navigation, components, localization, accessibility and test/setup instructions. |
@@ -157,10 +166,10 @@ The map identifies existing destinations, not a guarantee that each guide is ful
 |---|---|---|
 | New/changed UI workflow | UI README, `Documentacion/DEVELOPMENT.md`, usability docs, affected SPEC | Update only when behavior/setup/navigation claims change |
 | UI configuration/build change | UI Deploy/Development docs | State build-time vs runtime behavior and script side effects |
-| New API endpoint | API endpoint guide/README/SPEC and affected contract docs | Include route, verb, version, request/response shape |
-| API↔MAPI contract change | API and MAPI docs plus affected abstractions/DTO descriptions | Verify both sides, not only the controller |
+| New API endpoint | API endpoint guide/README/SPEC, `docs/api-spec.yml` and affected contract docs | Include route, verb, version, request/response shape; update OpenAPI only after verifying the implemented contract |
+| API↔MAPI contract change | `docs/data-model.md`, API and MAPI docs plus affected abstractions/DTO descriptions | Verify both separate Abstracciones projects and relevant UI consumers, not only the controller |
 | MAPI business rule | MAPI README/implementation guide/SPEC where applicable | Identify BW ownership |
-| DA/stored procedure change | MAPI `SCHEMA.md`, implementation guide, DBA change reference | Distinguish application expectation from live schema |
+| DA/stored procedure change | MAPI `SCHEMA.md`, implementation guide, DBA change reference; `docs/data-model.md` only if a public DTO changes | Distinguish application expectation from live schema; never infer physical columns/FKs from a DTO |
 | Connection/configuration key | Owning Deploy/README/config docs | Never include real secret values |
 | Authentication/mTLS | API/MAPI Deploy/security docs and relevant standards | State environment assumptions explicitly |
 | Runtime/dependency version | Owning README/Development/Deploy/standards | Verify the manifest/project file |
@@ -175,13 +184,19 @@ A documentation impact review is **not** permission to edit every nearby
 Markdown file. Update only documents whose statements, instructions or examples
 become false, incomplete or misleading because of the change.
 
-### Inherited files that still need reconciliation
+### Scope of the integrated VES reference files
 
-[Development guide](./development_guide.md), [data model](./data-model.md) and [API specification](./api-spec.yml) still describe LTI. They are not authoritative VES setup, schema or API contracts. This review records their status without claiming to rewrite them. If they are later replaced, state the VES scope, derive content from the actual applications and update inbound references.
+- [`data-model.md`](./data-model.md): documented API/MAPI DTOs and transfer contracts; not a physical schema.
+- [`api-spec.yml`](./api-spec.yml): representative OpenAPI 3.0.3 description of VES orchestration API; **not exhaustive nor independently verified**.
+- [`development_guide.md`](./development_guide.md): cross-component development setup and validation procedure, not a substitute for per-component setup documentation.
+- [MAPI `SCHEMA.md`](../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md): documented SQL expectations, schema and stored procedures; DBA evidence and live-state verification remain separate.
+- Historical Web Forms files remain in [`historical/`](./historical/); their proposals are not instructions to implement the current architecture.
+
+For cross-component navigation consult the [VES documentation index](./INDICE_DOCUMENTAL.md).
 
 ### Concrete examples of local documentation drift
 
-- [API Deploy.md](../Bccr.Supen.Ves.Api/Documentacion/Deploy.md) describes certificate bypass as Development-only and certificate enforcement as automatic in Staging/Production. Current [API Startup.cs](../Bccr.Supen.Ves.Api/Codigo/API/Startup.cs) selects behavior using `CertificadoCliente:Requerido`; [MAPI Startup.cs](../Bccr.Supen.Ves.Mapi/Codigo/MAPI/Startup.cs) uses `RequiereCertificado`. A guide must not infer the effective setting solely from the environment name. The deployment note about removing a security tag also lacks enough context to serve as a universal instruction; verify the affected configuration and intent before repeating it.
+- [API Deploy.md](../VES/Bccr.Supen.Ves.Api/Documentacion/Deploy.md) describes certificate bypass as Development-only and certificate enforcement as automatic in Staging/Production. Current [API Startup.cs](../VES/Bccr.Supen.Ves.Api/Codigo/API/Startup.cs) selects behavior using `CertificadoCliente:Requerido`; [MAPI Startup.cs](../VES/Bccr.Supen.Ves.Mapi/Codigo/MAPI/Startup.cs) uses `RequiereCertificado`. A guide must not infer the effective setting solely from the environment name. The deployment note about removing a security tag also lacks enough context to serve as a universal instruction; verify the affected configuration and intent before repeating it.
 - MAPI `SCHEMA.md` names the main catalog `BSSupen`/`BSSupen_Des`, while the MAPI README uses `BDSUPEN_Des`; `BDSupen` is the connection key registered in startup. Distinguish the key from an environment's actual catalog. This review did not connect to SQL Server and cannot resolve the deployed catalog name or certify the guide's claimed database inventory.
 - UI `DEVELOPMENT.md` lists `App.js` in its structure, while current source has `App.jsx`. Use actual file paths when updating examples and links.
 - Some agent guides contain older test/framework descriptions; backend standards records the project-file evidence. Do not treat an agent guide's technology summary as stronger evidence than the target project's declared dependencies.
@@ -731,8 +746,7 @@ standards reviews where provenance matters.
 
 - **English only:** replaced by language consistency with the owning VES
   document/module.
-- **Always update `data-model.md` for data changes:** replaced by actual MAPI
-  `SCHEMA.md`/DA/DBA documentation ownership.
+- **Always update `data-model.md` for data changes:** route VES DTO/transfer-contract changes to the current `docs/data-model.md`, and SQL/DA/DBA changes to MAPI `SCHEMA.md`; update both only when the change affects both.
 - **Always update `api-spec.yml` for API changes:** the inherited YAML describes
   LTI and is not authoritative until explicitly re-scoped/replaced.
 - **Review all recent changes in the whole codebase:** narrowed to the relevant

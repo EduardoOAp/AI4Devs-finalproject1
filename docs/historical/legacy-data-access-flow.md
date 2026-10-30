@@ -1,3 +1,5 @@
+> **REFERENCIA HISTÓRICA — NO NORMATIVA PARA LA ARQUITECTURA VIGENTE.** Modelo de acceso a datos histórico de ASP.NET Web Forms/VB.NET. Contiene inferencias y propuestas futuras de ORM, tablas o cambios de tipos SQL; ninguna es instrucción vigente de modificación de MAPI o base de datos. Para contratos vigentes de transferencia, consultar [data-model.md](../data-model.md); para persistencia MAPI, consultar [SCHEMA.md](../../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md). No ejecutar cambios de código, ORM, SQL ni permisos a partir de esta referencia.
+
 # Documento de diseño de base de datos
 
 ## Objetivo

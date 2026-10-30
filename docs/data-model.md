@@ -1,386 +1,385 @@
-# Modelo de datos de VES
+# VES Data Model
 
-Este documento describe los contratos de datos expuestos y utilizados por `Bccr.Supen.Ves.Api`, a partir de las clases de `Bccr.Supen.Ves.Abstracciones.Contenedores`, y el esquema y contrato SQL reportado para documentos STI en [`SCHEMA.md`](../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md). Los contratos son modelos de transferencia entre la API y sus servicios; salvo las tablas de documentos STI detalladas más adelante, las relaciones del diagrama son referencias conceptuales basadas en códigos y propiedades compartidos, no un esquema ORM ni garantías de integridad referencial.
+> **Active document — VES data contracts (API/MAPI).** Describes the DTOs and containers used to exchange information. This is not a physical SQL schema, a foreign-key map, or an EF migration specification. The API and MAPI solutions maintain independent `Abstracciones` projects. For tables, procedures, constraints, and verification provenance, consult [SCHEMA.md](../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md). Technical discrepancies are retained in [pending verifications](./VERIFICACIONES_PENDIENTES_MODELOS.md), without predetermining their resolution.
+
+This document describes the data contracts exposed and used by `Bccr.Supen.Ves.Api`, based on the classes in `Bccr.Supen.Ves.Abstracciones.Contenedores`, as well as the reported SQL schema and contract for STI documents in [`SCHEMA.md`](../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md). These contracts are transfer models between the API and its services. Except for the STI document tables detailed below, diagram relationships are conceptual references based on shared codes and properties, not an ORM schema or guarantees of referential integrity.
 
 ## Model Descriptions
 
-### 1. ArchivoNuevoVes y STIArchivoVes
-Representan información de archivos que se registran o tramitan en VES.
+### 1. ArchivoNuevoVes and STIArchivoVes
+These represent information about files registered or processed in VES.
 
 **Fields (`ArchivoNuevoVes`):**
-- `Usuario`: código de usuario asociado
-- `Nombre`: nombre del archivo
-- `CodigoTipoArchivo`: código del tipo de archivo
-- `CodigoFondo`: código del fondo
-- `Estado`: estado del registro
-- `UsuarioRegistra`: usuario que registra
-- `FechaRegistro`: fecha del registro
+- `Usuario`: associated user code
+- `Nombre`: file name
+- `CodigoTipoArchivo`: file type code
+- `CodigoFondo`: fund code
+- `Estado`: record status
+- `UsuarioRegistra`: registering user
+- `FechaRegistro`: registration date
 
 **Fields (`STIArchivoVes`):**
-- `Nombre`: nombre del archivo
-- `CodigoTipoArchivo`: código del tipo de archivo
-- `CodigoFondo`: código de fondo opcional (`int?`)
-- `CodigoEntidad`: código de entidad
-- `FechaDatos`: fecha de los datos
-- `Usuario`: código de usuario
+- `Nombre`: file name
+- `CodigoTipoArchivo`: file type code
+- `CodigoFondo`: optional fund code (`int?`)
+- `CodigoEntidad`: entity code
+- `FechaDatos`: data date
+- `Usuario`: user code
 
 **Validation Rules:**
-- Las clases declaran los tipos de sus propiedades, pero no especifican reglas de validación adicionales.
+- The classes declare property types but do not specify additional validation rules.
 
 **Relationships:**
-- Los códigos de usuario, tipo de archivo, fondo y entidad son referencias por valor; las clases no declaran propiedades de navegación.
+- User, file type, fund, and entity codes are references by value; the classes do not declare navigation properties.
 
-### 2. ArchivoRecibido, ArchivoEnviado, ArchivoPorEnviar y ArchivoEliminado
-Representan archivos según su etapa o condición en los procesos de recepción, envío, programación y eliminación.
+### 2. ArchivoRecibido, ArchivoEnviado, ArchivoPorEnviar, and ArchivoEliminado
+These represent files according to their stage or condition in the receiving, sending, scheduling, and deletion processes.
 
 **Fields (`ArchivoRecibido`):**
-- `Entidad`: entidad relacionada
-- `Id`: identificador del registro
-- `TipoDeArchivo`: tipo de archivo
-- `Fondo`: fondo relacionado
-- `FechaEnvio`: fecha de envío
-- `FechaDatos`: fecha de los datos
-- `Estado`: estado del archivo
-- `Usuario`: usuario relacionado
-- `Solicitud`: número de solicitud
+- `Entidad`: related entity
+- `Id`: record identifier
+- `TipoDeArchivo`: file type
+- `Fondo`: related fund
+- `FechaEnvio`: submission date
+- `FechaDatos`: data date
+- `Estado`: file status
+- `Usuario`: related user
+- `Solicitud`: request number
 
 **Fields (`ArchivoEnviado`):**
-- `Id`: identificador del registro
-- `TipoDeArchivo`: tipo de archivo
-- `Fondo`: fondo relacionado
-- `FechaEnvio`: fecha de envío
-- `FechaDatos`: fecha de los datos
-- `Estado`: estado del archivo
-- `Usuario`: usuario relacionado
-- `Solicitud`: número de solicitud
+- `Id`: record identifier
+- `TipoDeArchivo`: file type
+- `Fondo`: related fund
+- `FechaEnvio`: submission date
+- `FechaDatos`: data date
+- `Estado`: file status
+- `Usuario`: related user
+- `Solicitud`: request number
 
-**Fields (`ArchivoPorEnviar` y `ArchivoEliminado`):**
-- `Id`: identificador del registro
-- `TipoDeArchivo`: tipo de archivo
-- `Fondo`: fondo relacionado
-- `FechaEjecucion`: fecha de ejecución
-- `FechaDatos`: fecha de los datos
-- `Estado`: estado del archivo
-- `Usuario`: usuario relacionado
+**Fields (`ArchivoPorEnviar` and `ArchivoEliminado`):**
+- `Id`: record identifier
+- `TipoDeArchivo`: file type
+- `Fondo`: related fund
+- `FechaEjecucion`: execution date
+- `FechaDatos`: data date
+- `Estado`: file status
+- `Usuario`: related user
 
 **Validation Rules:**
-- Los contratos no declaran restricciones de longitud, obligatoriedad, unicidad ni validaciones de fecha.
+- The contracts do not declare length, required-field, uniqueness, or date-validation constraints.
 
 **Relationships:**
-- `TipoDeArchivo`, `Fondo`, `Entidad`, `Usuario` y `Solicitud` son datos de referencia del archivo; no se definen claves foráneas en estos contratos.
+- `TipoDeArchivo`, `Fondo`, `Entidad`, `Usuario`, and `Solicitud` are file reference data; these contracts do not define foreign keys.
 
 ### 3. TiposArchivo
-Describe la configuración de un tipo de archivo y los usuarios asociados a este.
+Describes the configuration of a file type and its associated users.
 
 **Fields:**
-- `CodigoTipoArchivo`: código del tipo de archivo
-- `Nombre`: nombre del tipo de archivo
-- `RequiereFondo`: indicador de si requiere fondo
-- `Periodicidad`: periodicidad del tipo de archivo
-- `Estado`: estado del tipo de archivo
-- `Abreviatura`: abreviatura
-- `FondoDefecto`: fondo por defecto
-- `CodigoInterno`: código interno
-- `ArchivoXSD`: referencia al esquema XSD
-- `LaListaDeUsuarios`: lista de usuarios asociados
+- `CodigoTipoArchivo`: file type code
+- `Nombre`: file type name
+- `RequiereFondo`: indicator of whether a fund is required
+- `Periodicidad`: file type frequency
+- `Estado`: file type status
+- `Abreviatura`: abbreviation
+- `FondoDefecto`: default fund
+- `CodigoInterno`: internal code
+- `ArchivoXSD`: XSD schema reference
+- `LaListaDeUsuarios`: list of associated users
 
 **Validation Rules:**
-- No se declaran reglas de validación adicionales en el contrato.
+- The contract does not declare additional validation rules.
 
 **Relationships:**
-- `LaListaDeUsuarios` representa una asociación con usuarios en la respuesta del contrato.
-- `UsuarioTipoArchivo` permite representar la asociación por los códigos `CodigoUsuario` y `CodigoTipoArchivo`.
+- `LaListaDeUsuarios` represents an association with users in the contract response.
+- `UsuarioTipoArchivo` can represent the association through `CodigoUsuario` and `CodigoTipoArchivo`.
 
-### 4. Usuario y UsuarioAutenticado
-Representan la identidad del usuario y los datos de usuario autenticado utilizados por la API.
+### 4. Usuario and UsuarioAutenticado
+These represent user identity and authenticated-user data used by the API.
 
 **Fields (`Usuario`):**
-- `CodigoUsuario`: código del usuario (`decimal`)
-- `Cedula`: identificación
-- `Nombre1`: primer nombre
-- `Apellido1`: primer apellido
-- `Apellido2`: segundo apellido
-- `AbreviaturaDeLaEntidadYNombreCompleto`: abreviatura de la entidad y nombre completo
+- `CodigoUsuario`: user code (`decimal`)
+- `Cedula`: identification number
+- `Nombre1`: first name
+- `Apellido1`: first surname
+- `Apellido2`: second surname
+- `AbreviaturaDeLaEntidadYNombreCompleto`: entity abbreviation and full name
 
 **Fields (`UsuarioAutenticado`):**
-- `CodigoUsuario`: código del usuario (`decimal`)
-- `CodigoRol`: código del rol
-- `CodigoEntidad`: código de la entidad
-- `Directorio`: directorio asociado
-- `Nombre`, `Nombre1`, `Apellido1`: nombre y datos personales
-- `CodigoInterno`: código interno
+- `CodigoUsuario`: user code (`decimal`)
+- `CodigoRol`: role code
+- `CodigoEntidad`: entity code
+- `Directorio`: associated directory
+- `Nombre`, `Nombre1`, `Apellido1`: name and personal details
+- `CodigoInterno`: internal code
 
 **Validation Rules:**
-- El contrato no declara restricciones de formato o unicidad.
+- The contract does not declare format or uniqueness constraints.
 
 **Relationships:**
-- El usuario puede asociarse con tipos de archivo a través de `UsuarioTipoArchivo`.
-- Los contratos de archivo incluyen códigos o valores de usuario, sin declarar una propiedad de navegación hacia `Usuario`.
+- A user may be associated with file types through `UsuarioTipoArchivo`.
+- File contracts include user codes or values without declaring a navigation property to `Usuario`.
 
 ### 5. UsuarioTipoArchivo
-Representa la asociación entre un usuario y un tipo de archivo.
+Represents the association between a user and a file type.
 
 **Fields:**
-- `CodigoUsuario`: código del usuario (`decimal`)
-- `CodigoTipoArchivo`: código del tipo de archivo (`int`)
+- `CodigoUsuario`: user code (`decimal`)
+- `CodigoTipoArchivo`: file type code (`int`)
 
 **Validation Rules:**
-- No se declaran reglas adicionales en el contrato.
+- The contract does not declare additional rules.
 
 **Relationships:**
-- Referencia conceptualmente a `Usuario` mediante `CodigoUsuario` y a `TiposArchivo` mediante `CodigoTipoArchivo`.
+- Conceptually references `Usuario` through `CodigoUsuario` and `TiposArchivo` through `CodigoTipoArchivo`.
 
-### 6. Entidad y Fondo
-Representan entidades y fondos utilizados por los procesos de VES.
+### 6. Entidad and Fondo
+These represent entities and funds used by VES processes.
 
 **Fields (`Entidad`):**
-- `CodigoEntidad`: código de la entidad
-- `Abreviatura`: abreviatura
-- `Nombre`: nombre de la entidad
-- `Estado`: estado de la entidad
+- `CodigoEntidad`: entity code
+- `Abreviatura`: abbreviation
+- `Nombre`: entity name
+- `Estado`: entity status
 
 **Fields (`Fondo`):**
-- `CodigoFondo`: código del fondo
-- `CodigoSupen`: código SUPEN
-- `Nombre`: nombre del fondo
-- `Ley`: ley asociada
-- `CodigoMoneda`: código de moneda
-- `CodigoRegimen`: código de régimen
-- `Descripcion`: descripción
+- `CodigoFondo`: fund code
+- `CodigoSupen`: SUPEN code
+- `Nombre`: fund name
+- `Ley`: associated law
+- `CodigoMoneda`: currency code
+- `CodigoRegimen`: pension scheme code
+- `Descripcion`: description
 
 **Validation Rules:**
-- Los contratos no especifican restricciones de obligatoriedad o formato.
+- The contracts do not specify required-field or format constraints.
 
 **Relationships:**
-- Los códigos de entidad y fondo son utilizados por contratos de archivos, operaciones y reportes.
-- Estas referencias no establecen por sí solas una relación física ni una cardinalidad de base de datos.
+- Entity and fund codes are used by file, operation, and reporting contracts.
+- These references do not, by themselves, establish a physical relationship or database cardinality.
 
-### 7. OperacionSEC, ResumenOperacion, DetalleOperacionConSaldos y SaldoOperacion
-Representan operaciones SEC, sus resúmenes, detalles y saldos.
+### 7. OperacionSEC, ResumenOperacion, DetalleOperacionConSaldos, and SaldoOperacion
+These represent SEC operations, their summaries, details, and balances.
 
 **Fields (`OperacionSEC`):**
-- `Lote`: identificador del lote opcional (`Int64?`)
-- `EntidadDestino`: código de entidad destino opcional (`int?`)
-- `AbreviaturaEntidad`: abreviatura de entidad
-- `CodigoProceso`: código de proceso opcional (`int?`)
-- `ESTCodigo`: código de estado
-- `FechaCiclo`: fecha de ciclo opcional
-- `TotalOperaciones`: total de operaciones
-- `FechaGeneracionArchivo`: fecha de generación opcional
-- `NumeroEnvio`: número de envío opcional (`Int64?`)
-- `MotivoRechazo`: motivo de rechazo
-- `Proceso` y `Estado`: descripción del proceso y estado
-- `Total`, `CantidadOperaciones`, `CantidadRechazadas`, `CantidadPendientes`: contadores
-- `TipoMovimiento`: tipo de movimiento
+- `Lote`: optional batch identifier (`Int64?`)
+- `EntidadDestino`: optional destination entity code (`int?`)
+- `AbreviaturaEntidad`: entity abbreviation
+- `CodigoProceso`: optional process code (`int?`)
+- `ESTCodigo`: status code
+- `FechaCiclo`: optional cycle date
+- `TotalOperaciones`: total number of operations
+- `FechaGeneracionArchivo`: optional file generation date
+- `NumeroEnvio`: optional submission number (`Int64?`)
+- `MotivoRechazo`: rejection reason
+- `Proceso` and `Estado`: process and status descriptions
+- `Total`, `CantidadOperaciones`, `CantidadRechazadas`, `CantidadPendientes`: counters
+- `TipoMovimiento`: transaction type
 
 **Fields (`ResumenOperacion`):**
-- `Lote`, `EntidadDestino` y `Proceso`: identificadores del lote, entidad destino y proceso
-- `EST_Codigo`: código de estado
-- `FechaCiclo`, `FechaGeneracionArchivo`: fechas del ciclo y generación
-- `NumeroEnvio`: número de envío opcional
-- `TotalOperaciones`: total de operaciones
-- `FechaOficializacion`, `UsuarioOficializacion`: datos opcionales de oficialización
-- `CantidadActualizacionesSaldo`, `UltimaFechaActualizacionesSaldo`, `UltimoUsuarioActualizacionesSaldo`: datos de actualizaciones de saldo
-- `FechaRechazo`, `UsuarioRechazo`, `MotivoRechazo`: datos de rechazo
-- `UsuarioRegistra`, `FechaRegistro`, `UsuarioModificacion`, `FechaModificacion`: datos de auditoría
-- `Bitacora`: colección de eventos `BitacoraOperacion`
+- `Lote`, `EntidadDestino`, and `Proceso`: batch, destination entity, and process identifiers
+- `EST_Codigo`: status code
+- `FechaCiclo`, `FechaGeneracionArchivo`: cycle and generation dates
+- `NumeroEnvio`: optional submission number
+- `TotalOperaciones`: total number of operations
+- `FechaOficializacion`, `UsuarioOficializacion`: optional formalization data
+- `CantidadActualizacionesSaldo`, `UltimaFechaActualizacionesSaldo`, `UltimoUsuarioActualizacionesSaldo`: balance update data
+- `FechaRechazo`, `UsuarioRechazo`, `MotivoRechazo`: rejection data
+- `UsuarioRegistra`, `FechaRegistro`, `UsuarioModificacion`, `FechaModificacion`: audit data
+- `Bitacora`: collection of `BitacoraOperacion` events
 
 **Fields (`DetalleOperacionConSaldos`):**
-- `OPE_Lote`, `OPE_EntidadDestino`: referencias al lote y entidad destino
-- `TipoIdentificacion`, `Identificacion`: identificación
-- `TipoFondo`, `CodigoFondo`: datos del fondo
-- `EST_Codigo`: código de estado
-- `Moneda`, `Monto`: moneda e importe
-- `MotivoRechazo`: motivo de rechazo
-- `NumeroContratoIndividual`, `IncentivoFiscal`, `TipoIdAfiliadoOrigen`, `IdAfiliadoOrigen`, `NumeroFormulario`: datos del detalle
-- `Saldos`: colección de `SaldoOperacion`
+- `OPE_Lote`, `OPE_EntidadDestino`: batch and destination entity references
+- `TipoIdentificacion`, `Identificacion`: identification details
+- `TipoFondo`, `CodigoFondo`: fund data
+- `EST_Codigo`: status code
+- `Moneda`, `Monto`: currency and amount
+- `MotivoRechazo`: rejection reason
+- `NumeroContratoIndividual`, `IncentivoFiscal`, `TipoIdAfiliadoOrigen`, `IdAfiliadoOrigen`, `NumeroFormulario`: operation detail data
+- `Saldos`: collection of `SaldoOperacion`
 
 **Fields (`SaldoOperacion`):**
-- `DET_OPE_Lote`, `DET_OPE_EntidadDestino`: referencias al lote y entidad destino del detalle
-- `NumeroPatrono`, `Monto`, `SubMonto1`, `MontoAcumulado`: datos de montos
-- `FechaControl`, `TipoFecha`: fecha y tipo de fecha de control
-- `NumeroContratoDesacumulacion`: número de contrato
-- `TipoIdentificacionCausante`, `NumeroIdentificacionCausante`: identificación del causante
-- `TipoBeneficiarioROP`: tipo de beneficiario
-- `FechaRevisionPension`: fecha opcional de revisión
+- `DET_OPE_Lote`, `DET_OPE_EntidadDestino`: references to the detail's batch and destination entity
+- `NumeroPatrono`, `Monto`, `SubMonto1`, `MontoAcumulado`: amount data
+- `FechaControl`, `TipoFecha`: control date and date type
+- `NumeroContratoDesacumulacion`: contract number
+- `TipoIdentificacionCausante`, `NumeroIdentificacionCausante`: originator identification
+- `TipoBeneficiarioROP`: beneficiary type
+- `FechaRevisionPension`: optional pension review date
 
 **Validation Rules:**
-- Los contratos no definen reglas de negocio para estados, montos o fechas.
+- The contracts do not define business rules for statuses, amounts, or dates.
 
 **Relationships:**
-- `ResumenOperacion` contiene una colección de bitácora.
-- `DetalleOperacionConSaldos` contiene una colección de saldos.
-- Los identificadores de lote y entidad destino permiten relacionar conceptualmente los resúmenes y detalles; no se declaran claves foráneas.
+- `ResumenOperacion` contains an audit-log collection.
+- `DetalleOperacionConSaldos` contains a balance collection.
+- Batch and destination entity identifiers provide conceptual links between summaries and details; no foreign keys are declared.
 
-### 8. Bitacora y Rastro
-Representan información de seguimiento y auditoría de solicitudes y operaciones.
+### 8. Bitacora and Rastro
+These represent request and operation tracking and audit information.
 
 **Fields (`Bitacora`):**
-- `Solicitud`: número de solicitud (`decimal`)
-- `Reporte`, `Entidad`, `Fecha`, `Fondo`, `Usuario`, `Proceso`, `Ejecucion`, `Estado`: datos de contexto
-- `Registros`: cantidad de registros (`decimal`)
-- `Inicio`, `UltProceso`: datos temporales del proceso
-- `Procesados`, `Errores`: contadores
+- `Solicitud`: request number (`decimal`)
+- `Reporte`, `Entidad`, `Fecha`, `Fondo`, `Usuario`, `Proceso`, `Ejecucion`, `Estado`: contextual data
+- `Registros`: record count (`decimal`)
+- `Inicio`, `UltProceso`: process timing data
+- `Procesados`, `Errores`: counters
 
 **Fields (`Rastro`):**
-- `Usuario`: usuario que ejecuta la acción
-- `Proceso`: proceso relacionado
-- `DireccionIp`: dirección IP
+- `Usuario`: user performing the action
+- `Proceso`: related process
+- `DireccionIp`: IP address
 
 **Fields (`BitacoraOperacion`):**
-- `Id`: identificador del evento (`long`)
-- `CodigoEvento`: código del evento
-- `FechaCiclo`, `FechaEvento`: fechas del ciclo y del evento
-- `Lote`, `Entidad`, `TotalOperaciones`: referencias y total opcionales
-- `Detalle`, `Usuario`, `Proceso`, `IP`: detalle y contexto del evento
-- `CodigoInternoEntidad`, `AbreviaturaEntidad`: referencias descriptivas de la entidad
+- `Id`: event identifier (`long`)
+- `CodigoEvento`: event code
+- `FechaCiclo`, `FechaEvento`: cycle and event dates
+- `Lote`, `Entidad`, `TotalOperaciones`: optional references and total
+- `Detalle`, `Usuario`, `Proceso`, `IP`: event details and context
+- `CodigoInternoEntidad`, `AbreviaturaEntidad`: descriptive entity references
 
 **Validation Rules:**
-- Los contratos no especifican retención, formato o reglas de auditoría.
+- The contracts do not specify retention, format, or audit rules.
 
 **Relationships:**
-- `BitacoraOperacion` se expone como colección en `ResumenOperacion`.
-- `Rastro` transporta datos de contexto de usuario, proceso e IP; no declara vínculos de persistencia.
+- `BitacoraOperacion` is exposed as a collection in `ResumenOperacion`.
+- `Rastro` carries user, process, and IP context data without declaring persistence relationships.
 
-### 9. Proceso, DiaNoHabil y ReglaCalendario
-Representan procesos y datos de calendario utilizados en la ejecución de reglas y operaciones.
+### 9. Proceso, DiaNoHabil, and ReglaCalendario
+These represent processes and calendar data used to execute rules and operations.
 
 **Fields (`Proceso`):**
-- `Id`: identificador del proceso
-- `Nombre`: nombre del proceso
-- `Codigo`: código del proceso (`char`)
+- `Id`: process identifier
+- `Nombre`: process name
+- `Codigo`: process code (`char`)
 
 **Fields (`DiaNoHabil`):**
-- `CodigoProceso`: código del proceso
-- `Fecha`: fecha no hábil
-- `Descripcion`: descripción
+- `CodigoProceso`: process code
+- `Fecha`: non-business date
+- `Descripcion`: description
 
 **Fields (`ReglaCalendario`):**
-- `Nombre`, `NombreProceso`, `Descripcion`, `Tipo`: identificación y descripción de la regla
-- `CodigoProceso`: código del proceso
-- `UsarTodos`: indicador
-- `Dia`, `Mes`, `Anyo`: componentes de calendario
+- `Nombre`, `NombreProceso`, `Descripcion`, `Tipo`: rule identification and description
+- `CodigoProceso`: process code
+- `UsarTodos`: indicator
+- `Dia`, `Mes`, `Anyo`: calendar components
 
 **Validation Rules:**
-- No se especifican formatos ni reglas para los valores de calendario en estos contratos.
+- These contracts do not specify formats or rules for calendar values.
 
 **Relationships:**
-- `DiaNoHabil` y `ReglaCalendario` incluyen `CodigoProceso` como referencia a un proceso.
+- `DiaNoHabil` and `ReglaCalendario` include `CodigoProceso` as a process reference.
 
-### 10. ParametroSEC, STIArchivo y ModeloValidacion
-Incluyen parámetros SEC, metadatos de archivos procesados por STI y el resultado común de validación.
+### 10. ParametroSEC, STIArchivo, and ModeloValidacion
+These include SEC parameters, metadata for files processed by STI, and the common validation result.
 
 **Fields (`ParametroSEC`):**
-- `Parametro`: nombre del parámetro
-- `Valor`: valor del parámetro
-- `EsPublico`: indicador (`char`)
+- `Parametro`: parameter name
+- `Valor`: parameter value
+- `EsPublico`: indicator (`char`)
 
 **Fields (`STIArchivo`):**
-- `FechaDatos`: fecha de los datos
-- `Registros`: cantidad de registros (`decimal`)
-- `Fondo`, `Tipo`, `Entidad`, `Archivo`: referencias y nombre del archivo
-- `RequiereFecha`: indicador (`bool`)
-- `RequiereFondo`: indicador (`char`)
-- `NumeroSolicitud`: número de solicitud
+- `FechaDatos`: data date
+- `Registros`: record count (`decimal`)
+- `Fondo`, `Tipo`, `Entidad`, `Archivo`: references and file name
+- `RequiereFecha`: indicator (`bool`)
+- `RequiereFondo`: indicator (`char`)
+- `NumeroSolicitud`: request number
 
 **Fields (`ModeloValidacion`):**
-- `EsValido`: resultado de validación (`bool`)
-- `Mensaje`: mensaje asociado
+- `EsValido`: validation result (`bool`)
+- `Mensaje`: associated message
 
 **Validation Rules:**
-- `ModeloValidacion` inicializa el resultado como válido; el constructor que recibe un mensaje lo inicializa como inválido.
+- `ModeloValidacion` initializes the result as valid; the constructor that receives a message initializes it as invalid.
 
 **Relationships:**
-- `STIArchivo` reúne información del archivo, entidad, tipo y fondo en un solo contrato.
-- `ModeloValidacion` se utiliza como resultado de validación; no representa una entidad persistente.
+- `STIArchivo` combines file, entity, type, and fund information in a single contract.
+- `ModeloValidacion` is used as a validation result; it does not represent a persistent entity.
 
 ### 11. ReporteErrorArchivo
-Representa el reporte de errores asociado al procesamiento de un archivo.
+Represents the error report associated with processing a file.
 
 **Fields:**
-- `NombreArchivo`: nombre del archivo
-- `ArchivoExcel`: referencia o nombre del archivo Excel
-- `CodigoEntidad`: código de entidad
-- `CodigoFondo`: código de fondo
-- `FechaDeDatos`: fecha de los datos
-- `CodigoInterno`: código interno
-- `ModeloValidacion`: resultado de validación
+- `NombreArchivo`: file name
+- `ArchivoExcel`: Excel file reference or name
+- `CodigoEntidad`: entity code
+- `CodigoFondo`: fund code
+- `FechaDeDatos`: data date
+- `CodigoInterno`: internal code
+- `ModeloValidacion`: validation result
 
 **Validation Rules:**
-- No se declaran restricciones adicionales en el contrato.
+- No additional constraints are declared in the contract.
 
 **Relationships:**
-- Contiene un `ModeloValidacion` y códigos de referencia para entidad, fondo y código interno.
+- Contains a `ModeloValidacion` and reference codes for the entity, fund, and internal code.
 
-## Contratos de consulta de documentos STI
+## STI Document Query Contracts
 
-Los contratos de respuesta de API y los contratos de MAPI tienen nombres y
-campos equivalentes, pero pertenecen a proyectos `Abstracciones` separados.
-El modelo de acceso a datos de MAPI también proyecta únicamente los campos de
-la consulta. Estos tipos de transferencia no representan el esquema SQL.
+The API response contracts and MAPI contracts have equivalent names and fields, but belong to separate `Abstracciones` projects. The MAPI data-access model also projects only the query fields. These transfer types do not represent the SQL schema.
 
 ### `TipoDocumentoConsulta`
 
-| Propiedad | Tipo C# | Descripción |
+| Property | C# type | Description |
 |---|---|---|
-| `CodigoTipoDoc` | `int` | Código del tipo de documento. |
-| `Nombre` | `string` | Nombre del tipo de documento. |
+| `CodigoTipoDoc` | `int` | Document type code. |
+| `Nombre` | `string` | Document type name. |
 
 ### `DocumentoConsulta`
 
-| Propiedad | Tipo C# | Descripción |
+| Property | C# type | Description |
 |---|---|---|
-| `Codigo` | `int` | Código del documento. |
-| `NombreArchivo` | `string` | Nombre del archivo asociado. |
-| `Tipo` | `string` | Nombre del tipo de documento asociado. |
-| `Titulo` | `string` | Título del documento. |
-| `FechaPublicacion` | `string` | Fecha de publicación serializada como `yyyy-MM-dd`. |
+| `Codigo` | `int` | Document code. |
+| `NombreArchivo` | `string` | Associated file name. |
+| `Tipo` | `string` | Associated document type name. |
+| `Titulo` | `string` | Document title. |
+| `FechaPublicacion` | `string` | Publication date serialized as `yyyy-MM-dd`. |
 
-`DocumentoConsulta` no declara una propiedad `Documento`: el contenido binario
-se usa únicamente como criterio de elegibilidad en la consulta y no se mapea ni
-se devuelve en el resultado.
+`DocumentoConsulta` does not declare a `Documento` property: binary content is used solely as an eligibility criterion in the query and is neither mapped nor returned in the result.
 
-## Persistencia de documentos STI
+## STI Document Persistence
+
+> **Documentary synopsis of the reported SQL definitions, not a second canonical source.** To modify, validate, or corroborate physical objects, consult the [MAPI SCHEMA.md](../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md) and obtain DBA evidence for the corresponding environment. The data in this section are retained without resolving the technical reconciliation items pending verification (V).
 
 ### `STI_Documentos`
 
-| Columna | Tipo SQL | Nulabilidad | Descripción |
+| Column | SQL type | Nullability | Description |
 |---|---|---|---|
-| `CodigoDocumento` | `int` | No nulo | Clave primaria. |
-| `CodigoTipoDoc` | `int` | Nulo | Tipo de documento; referencia a `STI_TiposDocumento.CodigoTipoDoc`. |
-| `Titulo` | `varchar(100)` | No nulo | Título del documento. |
-| `Resumen` | `varchar(255)` | No nulo | Resumen del documento. |
-| `NombreArchivo` | `varchar(30)` | Nulo | Nombre del archivo asociado. |
-| `Publico` | `char(1)` | No nulo | Indicador restringido a `N` o `S`. |
-| `FechaPublicacion` | `datetime` | No nulo | Fecha de publicación. |
-| `UsuarioPublica` | `varchar(50)` | No nulo | Usuario que publica el documento. |
-| `FechaCaduca` | `datetime` | Nulo | Fecha opcional de caducidad. |
-| `Documento` | `image` | Nulo | Contenido binario del archivo. |
+| `CodigoDocumento` | `int` | NOT NULL | Primary key. |
+| `CodigoTipoDoc` | `int` | NULL | Document type; references `STI_TiposDocumento.CodigoTipoDoc`. |
+| `Titulo` | `varchar(100)` | NOT NULL | Document title. |
+| `Resumen` | `varchar(255)` | NOT NULL | Document summary. |
+| `NombreArchivo` | `varchar(30)` | NULL | Associated file name. |
+| `Publico` | `char(1)` | NOT NULL | Indicator restricted to `N` or `S`. |
+| `FechaPublicacion` | `datetime` | NOT NULL | Publication date. |
+| `UsuarioPublica` | `varchar(50)` | NOT NULL | User publishing the document. |
+| `FechaCaduca` | `datetime` | NULL | Optional expiration date. |
+| `Documento` | `image` | NULL | Binary file content. |
 
 ### `STI_TiposDocumento`
 
-| Columna | Tipo SQL | Nulabilidad | Descripción |
+| Column | SQL type | Nullability | Description |
 |---|---|---|---|
-| `CodigoTipoDoc` | `int` | No nulo | Clave primaria. |
-| `Nombre` | `varchar(40)` | No nulo | Nombre del tipo de documento. |
-| `Estado` | `char(1)` | No nulo | Estado restringido a `I` (inactivo) o `A` (activo). |
+| `CodigoTipoDoc` | `int` | NOT NULL | Primary key. |
+| `Nombre` | `varchar(40)` | NOT NULL | Document type name. |
+| `Estado` | `char(1)` | NOT NULL | Status restricted to `I` (inactive) or `A` (active). |
 
-**Relación:** la FK `FK_Documentos_TiposDoc` enlaza `STI_Documentos.CodigoTipoDoc` con `STI_TiposDocumento.CodigoTipoDoc`. Cada documento puede tener cero o un tipo (`CodigoTipoDoc` admite `NULL`); un tipo puede corresponder a varios documentos.
+**Relationship:** The foreign key `FK_Documentos_TiposDoc` links `STI_Documentos.CodigoTipoDoc` to `STI_TiposDocumento.CodigoTipoDoc`. Each document may have zero or one type (`CodigoTipoDoc` allows `NULL`); a type may be associated with multiple documents.
 
-### Procedimientos almacenados documentados
+### Documented Stored Procedures
 
-- `ListarTiposDocumentos` devuelve únicamente tipos con estado `A`.
-- Según el contrato reportado por DBA en [`SCHEMA.md`](../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md), `ListarDocumentos` acepta un código de tipo positivo o `-1`, incluye solo documentos con nombre y contenido binario no nulos, no filtra por `FechaCaduca` (los caducados se listan; decisión del solicitante, 2026-10-22), excluye los documentos sin tipo en **Todos**, ordena por fecha de publicación descendente y no proyecta el binario. La confirmación corresponde a un ambiente no productivo y no constituye verificación independiente ni estado de producción.
-- `ObtenerDocumento` devuelve los metadatos del documento por código, sin la columna binaria `Documento`. La aplicación expone `codigoDocumento`, `codigoTipoDoc`, `titulo`, `resumen`, `nombreArchivo`, `fechaPublicacion`, `usuarioPublica` y `fechaCaduca` (más `archivoDisponible`, calculado); `Publico` no se expone y permite abrir documentos caducados; la caducidad solo filtra el listado. Probado localmente en ambiente no productivo, sin verificación de producción.
-- `GuardarDocumento` intenta insertar o actualizar metadatos. En una inserción asigna `MAX(CodigoDocumento) + 1`, por lo que el script no obtiene un código utilizable cuando la tabla está vacía. Para actualizar, exige simultáneamente que `Titulo`, `Resumen`, `FechaPublicacion` y `FechaCaduca` sean distintos de los valores recibidos; las comparaciones con `NULL` no son verdaderas en SQL, y el procedimiento devuelve el código aunque el `UPDATE` no afecte filas.
-- `SubirArchivo` asigna el nombre y contenido binario. El código `1` selecciona el código máximo existente; si `NombreArchivo` es `NULL`, el procedimiento elimina la fila destino.
-- `BajarArchivo` devuelve el contenido binario por código y `EliminarDocumento` elimina la fila por código.
+- `ListarTiposDocumentos` returns only types with status `A`.
+- According to the DBA-reported contract in [`SCHEMA.md`](../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md), `ListarDocumentos` accepts a positive type code or `-1`; includes only documents with non-null file names and binary content; does not filter by `FechaCaduca` (expired documents remain listed, per requester decision dated 2026-10-22); excludes documents without a type from the **All** view; sorts by publication date in descending order; and does not project binary content. This confirmation relates to a non-production environment and does not constitute independent verification or evidence of production state.
+- `ObtenerDocumento` returns document metadata by code, excluding the binary `Documento` column. The application exposes `codigoDocumento`, `codigoTipoDoc`, `titulo`, `resumen`, `nombreArchivo`, `fechaPublicacion`, `usuarioPublica`, and `fechaCaduca` (plus the calculated `archivoDisponible`); `Publico` is not exposed, and expired documents can still be opened; expiration is used only to filter the listing. Tested locally in a non-production environment; production behavior has not been verified.
+- `GuardarDocumento` attempts to insert or update metadata. On insertion it assigns `MAX(CodigoDocumento) + 1`, so the script cannot obtain a usable code when the table is empty. On update it simultaneously requires `Titulo`, `Resumen`, `FechaPublicacion`, and `FechaCaduca` to differ from the supplied values; comparisons with `NULL` do not evaluate to true in SQL, and the procedure returns the code even if the `UPDATE` affects no rows.
+- `SubirArchivo` assigns the file name and binary content. Code `1` selects the highest existing code; if `NombreArchivo` is `NULL`, the procedure deletes the target row.
+- `BajarArchivo` returns binary content by code, and `EliminarDocumento` deletes the row by code.
 
-El script declara `NombreArchivo` como `varchar(30)` en la tabla y `varchar(50)` en el parámetro de `SubirArchivo`; la columna limita el tamaño persistido. `BajarArchivo` está marcado en el propio script como procedimiento de referencia proporcionado por el usuario, por lo que su presencia y firma en la base destino requieren verificación.
+The script declares `NombreArchivo` as `varchar(30)` in the table and `varchar(50)` in the `SubirArchivo` parameter; the column limits the persisted length. `BajarArchivo` is labeled in the script itself as a reference procedure provided by the user, so its presence and signature in the target database require verification.
 
 ## Entity Relationship Diagram
 
-El siguiente diagrama combina asociaciones conceptuales entre contratos API con la relación física declarada en el SQL proporcionado para las tablas de documentos STI. No implica que esas tablas estén desplegadas actualmente.
+The following diagram combines conceptual associations among API contracts with the physical relationship declared in the supplied SQL for STI document tables. It does not imply that these tables are currently deployed.
 
 ```mermaid
 erDiagram
@@ -498,37 +497,37 @@ erDiagram
         image Documento
     }
 
-    Usuario ||--o{ UsuarioTipoArchivo : "codigo de usuario"
-    TiposArchivo ||--o{ UsuarioTipoArchivo : "codigo de tipo"
-    TiposArchivo ||--o{ ArchivoVES : "referencia por codigo"
-    Entidad ||--o{ ArchivoVES : "referencia por codigo"
-    Fondo ||--o{ ArchivoVES : "referencia por codigo"
-    Usuario ||--o{ ArchivoVES : "referencia por codigo"
-    ResumenOperacion ||--o{ BitacoraOperacion : "coleccion de eventos"
-    ResumenOperacion ||--o{ DetalleOperacion : "lote y entidad destino"
-    DetalleOperacion ||--o{ SaldoOperacion : "coleccion de saldos"
-    Proceso ||--o{ ReglaCalendario : "codigo de proceso"
-    Proceso ||--o{ DiaNoHabil : "codigo de proceso"
+    Usuario ||--o{ UsuarioTipoArchivo : "user code"
+    TiposArchivo ||--o{ UsuarioTipoArchivo : "type code"
+    TiposArchivo ||--o{ ArchivoVES : "code reference"
+    Entidad ||--o{ ArchivoVES : "code reference"
+    Fondo ||--o{ ArchivoVES : "code reference"
+    Usuario ||--o{ ArchivoVES : "code reference"
+    ResumenOperacion ||--o{ BitacoraOperacion : "event collection"
+    ResumenOperacion ||--o{ DetalleOperacion : "batch and destination entity"
+    DetalleOperacion ||--o{ SaldoOperacion : "balance collection"
+    Proceso ||--o{ ReglaCalendario : "process code"
+    Proceso ||--o{ DiaNoHabil : "process code"
     STI_TiposDocumento o|--o{ STI_Documentos : "CodigoTipoDoc"
 ```
 
 ## Key Design Principles
 
-1. **Contratos de transferencia**: las clases de contenedores definen los datos que intercambian la API y los servicios.
+1. **Transfer contracts**: Container classes define the data exchanged between the API and services.
 
-2. **Referencias por código**: varios contratos se relacionan mediante códigos escalares, sin propiedades de navegación ni garantías declaradas de integridad referencial.
+2. **Code-based references**: Several contracts are related through scalar codes, without navigation properties or declared guarantees of referential integrity.
 
-3. **Trazabilidad**: los modelos de operación, archivo y bitácora transportan estados, solicitudes, fechas, usuarios y contadores de procesamiento.
+3. **Traceability**: Operation, file, and audit-log models carry statuses, requests, dates, users, and processing counters.
 
-4. **Composición de resultados**: algunos contratos agrupan colecciones relacionadas, como usuarios por tipo de archivo, eventos de bitácora por resumen y saldos por detalle de operación.
+4. **Result composition**: Some contracts group related collections, such as users by file type, audit-log events by summary, and balances by operation detail.
 
-5. **Validación explícita en contratos**: `ModeloValidacion` expone el resultado y el mensaje de validación; no se deben inferir otras reglas a partir de la forma de las propiedades.
+5. **Explicit contract validation**: `ModeloValidacion` exposes the validation result and message; additional rules MUST NOT be inferred solely from the shape of its properties.
 
 ## Notes
 
-- Los nombres y tipos documentados corresponden a las propiedades públicas de los contenedores consultados en `Bccr.Supen.Ves.Abstracciones.Contenedores`.
-- Los tipos anulables marcados explícitamente en C# se señalan como opcionales; que una propiedad no sea anulable no confirma por sí solo una restricción de base de datos.
-- Los identificadores `CodigoEntidad`, `CodigoFondo`, `CodigoTipoArchivo`, `CodigoUsuario`, `Solicitud` y `Lote` son valores de referencia transportados por los contratos.
-- Las columnas, claves y contratos SQL de documentos STI se documentan en `VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md`; la verificación de DBA se registra como confirmación reportada del ambiente no productivo, no como estado de producción.
-- `ArchivoSEC` representa metadatos de archivo del sistema de archivos (`Nombre`, `Creacion`, `UltimoAcceso`, `UltimaEscritura`, `NombreCompleto`); no es el mismo contrato que los registros de archivos de VES.
-- El contenido marcado entre `INICIO DE BORRADO` y `FIN DE BORRADO` corresponde al modelo previo de reclutamiento y se conserva únicamente para revisión antes de eliminarlo.
+- The documented names and types correspond to the public properties of the containers reviewed in `Bccr.Supen.Ves.Abstracciones.Contenedores`.
+- Types explicitly marked nullable in C# are described as optional; a non-nullable property does not, by itself, establish a database constraint.
+- The identifiers `CodigoEntidad`, `CodigoFondo`, `CodigoTipoArchivo`, `CodigoUsuario`, `Solicitud`, and `Lote` are reference values carried by the contracts.
+- STI document columns, keys, and SQL contracts are documented in `VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md`; DBA verification is recorded as a reported confirmation for a non-production environment, not as evidence of production state.
+- `ArchivoSEC` represents file-system metadata (`Nombre`, `Creacion`, `UltimoAcceso`, `UltimaEscritura`, `NombreCompleto`); it is not the same contract as VES file records.
+- This file documents VES contracts. Historical references to recruitment models are not part of this version; any legacy models are maintained separately in `docs/historical/`.

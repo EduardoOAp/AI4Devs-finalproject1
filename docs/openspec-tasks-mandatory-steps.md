@@ -26,6 +26,14 @@ alwaysApply: true
 > only call the API, never MAPI or SQL Server. Steps that do not apply to VES
 > are not removed; they are marked.
 
+## Scope Control: Exploration vs. Implementation
+
+- **Read-only (`/opsx:explore`)**: review the user story, source code, contracts, and documentation; identify affected files and present an impact assessment matrix. **Do not** create branches, tasks, reports, or files; **do not** run tests or commands with side effects, or modify code, OpenSpec, Azure DevOps, or databases.
+- **Propose documentation**: create or update `tasks.md` only when explicitly authorized to write OpenSpec artifacts. Such authorization **does not** permit source-code changes or implementation execution.
+- **Implement (`/opsx:apply`)**: requires explicit approval to modify source code and the affected components. When implementation proceeds, all mandatory steps below apply.
+- **Unavailable tools or access**: record each affected test as **BLOCKED / NOT VERIFIED**, stating the reason. Never fabricate results or mark the task as completed. Do not access production or execute data-modifying SQL.
+- The `AGENT.md`, `openspec/config.yaml`, and design manifest files are repository references. If unavailable, explicitly document that limitation.
+
 When creating or updating `tasks.md` artifacts in OpenSpec changes, you MUST:
 
 ## 1. Read openspec/config.yaml First
@@ -41,32 +49,32 @@ When creating or updating `tasks.md` artifacts in OpenSpec changes, you MUST:
 > case this document is the source of the mandatory steps. You MUST ALSO read,
 > for each affected component, its `README.md`, `AGENT.md` and `SPEC.md`
 > (when present), plus the applicable standards in `docs/`
-> ([base](\base-standards.md), [backend](\backend-standards.md),
-> [frontend](\frontend-standards.md), [documentation](\documentation-standards.md))
-> and [development guide](\development_guide.md).
+> ([base](./base-standards.md), [backend](./backend-standards.md),
+> [frontend](./frontend-standards.md), [documentation](./documentation-standards.md))
+> and [development guide](./development_guide.md).
 
-> Tambien debes aplicar para API's debes consultar 
->[endpoint guide](..\VES\Bccr.Supen.Ves.Api\Documentacion\ComoCrearUnNuevoEndpoint.md) y
->[Deploy guide](..\VES\Bccr.Supen.Ves.Api\Documentacion\Deploy.md).
+> For API changes, you MUST also consult the
+> [endpoint guide](../VES/Bccr.Supen.Ves.Api/Documentacion/ComoCrearUnNuevoEndpoint.md) and the
+> [deployment guide](../VES/Bccr.Supen.Ves.Api/Documentacion/Deploy.md).
 
-> Tambien debes aplicar para MAPI's debes consultar 
->[Implementation guide](..\VES\Bccr.Supen.Ves.Mapi\Documentacion\ComoImplementarUnMAPI.md) y
->[environment verification guide](..\VES\Bccr.Supen.Ves.Mapi\Documentacion\VerificacionEntorno.md).
+> For MAPI changes, you MUST also consult the
+> [implementation guide](../VES/Bccr.Supen.Ves.Mapi/Documentacion/ComoImplementarUnMAPI.md) and the
+> [environment verification guide](../VES/Bccr.Supen.Ves.Mapi/Documentacion/VerificacionEntorno.md).
 
-> y por ultimo debes aplicar para UI's debes consultar 
->[Deploy guide](..\VES\Bccr.Supen.Ves.UI\Documentacion\Deploy.md),
->[development guide](..\VES\Bccr.Supen.Ves.UI\Documentacion\DEVELOPMENT.md),
->[Usability guide](..\VES\Bccr.Supen.Ves.UI\Documentacion\USABILIDAD.md).
+> For UI changes, you MUST also consult the
+> [deployment guide](../VES/Bccr.Supen.Ves.UI/Documentacion/Deploy.md),
+> [development guide](../VES/Bccr.Supen.Ves.UI/Documentacion/DEVELOPMENT.md), and
+> [usability guide](../VES/Bccr.Supen.Ves.UI/Documentacion/USABILIDAD.md).
 
-> Y para los diseños visuales seguir los lineamientos establecidos en 
->[Data load design system](..\VES\Bccr.Supen.Ves.UI\Prototipo-UI\data-load-design-system.html),
->[Design handoff guide](..\VES\Bccr.Supen.Ves.UI\Prototipo-UI\DESIGN-HANDOFF.md),
->[Design system guide](..\VES\Bccr.Supen.Ves.UI\Prototipo-UI\DESIGN-SYSTEM.md),
->[Design manifests guide](..\VES\Bccr.Supen.Ves.UI\Prototipo-UI\DESIGN-MANIFEST.json).
+> For visual design, follow the guidelines in
+> `VES/Bccr.Supen.Ves.UI/Prototipo-UI/data-load-design-system.html` (present in the repository; its visual correspondence with the current UI still requires verification),
+> the [design handoff guide](../VES/Bccr.Supen.Ves.UI/Prototipo-UI/DESIGN-HANDOFF.md),
+> the [design system guide](../VES/Bccr.Supen.Ves.UI/Prototipo-UI/DESIGN-SYSTEM.md), and
+> `VES/Bccr.Supen.Ves.UI/Prototipo-UI/DESIGN-MANIFEST.json` (present in the repository; its correspondence with screens and components still requires verification).
 
-> **Pantallas de UI (reutilización obligatoria):** antes de definir las tareas de una pantalla, revisar `Codigo/src/componentes` y reutilizar los componentes comunes en lugar de crear controles propios. En particular, las acciones estándar (Abrir, Nuevo, Eliminar, Descargar…) se generan con la `Botonera` común según las opciones de seguridad del usuario en BD (ver [frontend-standards.md](frontend-standards.md)). Las tareas deben nombrar el componente común reutilizado.
+> **UI screens (mandatory reuse):** before defining screen implementation tasks, inspect `Codigo/src/componentes` and reuse existing shared components instead of creating custom controls. In particular, standard actions (`Abrir`, `Nuevo`, `Eliminar`, `Descargar`, etc.) are generated through the shared `Botonera` component, according to the user's security options stored in the database (see [frontend-standards.md](./frontend-standards.md)). Tasks must explicitly identify the shared component being reused.
 
-> **Pruebas manuales locales sin GAUDI:** con `RequiereJwt=false` el API autentica como `localhost`, de modo que no se verifican 401/403; esos criterios deben quedar como «no verificados» en el reporte. Si el logger de Event Log del BCCR falla (`SecurityException`), registrar las fuentes de eventos del componente (p. ej. `VES`, `VES.API`) en lugar de silenciar el logging, o documentar el bloqueo.
+> **Local manual testing without GAUDI:** when `RequiereJwt=false`, the API authenticates as `localhost`; therefore, HTTP 401/403 behavior cannot be verified and those acceptance criteria must be reported as **NOT VERIFIED**. If the BCCR Event Log logger fails with `SecurityException`, register the component's event sources (e.g., `VES`, `VES.API`) instead of suppressing logging, or document the blocker.
 
 
 ## 2. Mandatory Steps
@@ -76,7 +84,7 @@ All implementation tasks MUST include these steps in the correct order:
 ### Step 0: Create Feature Branch (MUST BE FIRST)
 - **Location**: Must be the very first step (Step 0)
 - **Branch naming**: `feature/[ticket-id]` or `feature/[change-name]`
-  - VES does not require a `-backend`/`-frontend` suffix; use `feature/<descripcion>` (or `fix/<descripcion>`, `refactor/<descripcion>`) as in each repository's README/AGENT.md
+  - VES does not require a `-backend`/`-frontend` suffix; use `feature/<description>` (or `fix/<description>`, `refactor/<description>`) as in each repository's README/AGENT.md
   - **Base branch depends on the component**: `Bccr.Supen.Ves.UI` and `Bccr.Supen.Ves.Mapi` branch from `dev` (PR back to `dev`); `Bccr.Supen.Ves.Api` branches from `main` (PR to `main`). Confirm in the component's README/AGENT.md before creating the branch
   - A change that touches more than one component creates one branch **per affected repository/folder** following that component's flow
 - **Action**: Create and switch to feature branch before any code changes
@@ -95,7 +103,7 @@ All implementation tasks MUST include these steps in the correct order:
 
 **VES environment rules for every manual test step:**
 - Start the components in dependency order: **MAPI → API → UI** (see [development guide, section 5](./development_guide.md)). The API may point to the shared development MAPI when the team procedure allows it.
-- Confirm the **effective** URL/port from the process output, `launchSettings.json`, `ApiEndpoints` and the UI configuration (`Codigo/config/{ambiente}.json`); do not assume ports and do not change code to match an "expected" port.
+- Confirm the **effective** URL/port from the process output, `launchSettings.json`, `ApiEndpoints` and the UI configuration (`Codigo/config/{environment}.json`); do not assume ports and do not change code to match an "expected" port.
 - Never test against production, never use real/production credentials or certificates, and never write secrets, tokens, certificates or connection strings in reports, `tasks.md` or commits.
 - Development-only authentication/certificate bypass decorators must not be moved to other environments.
 - The SQL Server schema and stored procedures are owned by the DBA: do not alter schema/procedures, do not generate EF migrations and do not run ad-hoc mutating SQL to "restore" or prepare state. Restore state through the application operations (API/MAPI endpoints) or coordinate with the DBA.
@@ -111,7 +119,7 @@ All implementation tasks MUST include these steps in the correct order:
    - Document the exact test command(s) that will be executed
 
 2. **Run Targeted Unit Tests First**:
-   - Execute focused tests for the modified module(s) and related behavior (for example `dotnet test <proyecto>.csproj --filter <...>` for API/MAPI, or `npx vitest run <ruta>` for UI)
+   - Execute focused tests for the modified module(s) and related behavior (for example `dotnet test <project>.csproj --filter <...>` for API/MAPI, or `npx vitest run <path>` for UI)
    - Confirm failures are resolved and no new regressions appear in targeted scope
    - Capture command output summary (passed/failed/skipped)
 
@@ -312,7 +320,7 @@ All implementation tasks MUST include these steps in the correct order:
 
 ### Step N+4: Update Technical Documentation (MANDATORY)
 
-- Follow [documentation-standards.md](docs/documentation-standards.md): identify the affected component and update only the documents whose statements become false, incomplete or misleading (see its "Change-to-document decision matrix"). Examples of VES destinations: component `README.md`/`AGENT.md`/`SPEC.md`, API `ComoCrearUnNuevoEndpoint.md`, MAPI `ComoImplementarUnMAPI.md` and `SCHEMA.md`, UI `Documentacion/DEVELOPMENT.md`
+- Follow [documentation-standards.md(./documentation-standards.md): identify the affected component and update only the documents whose statements become false, incomplete or misleading (see its "Change-to-document decision matrix"). Examples of VES destinations: component `README.md`/`AGENT.md`/`SPEC.md`, API `ComoCrearUnNuevoEndpoint.md`, MAPI `ComoImplementarUnMAPI.md` and `SCHEMA.md`, UI `Documentacion/DEVELOPMENT.md`
 - Document contract changes on **both** sides (API and MAPI `Abstracciones` are separate, not one shared library)
 - Preserve Spanish routes, properties and stored procedure names; never include real secrets
 - Mark contracts as verified only after they were implemented and tested; do not describe a planned contract as implemented
@@ -421,7 +429,7 @@ This rule applies when:
    - Database state restoration actions
    - Any issues encountered and resolutions
 
-5. **Ejecutar update-docs según `docs/documentation-standards.md`**
+5. **Run the documentation update procedure in accordance with `docs/documentation-standards.md`**
 
 ## Failure to Follow
 

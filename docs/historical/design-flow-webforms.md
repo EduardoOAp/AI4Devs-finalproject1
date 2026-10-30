@@ -1,3 +1,5 @@
+> **REFERENCIA HISTÓRICA — NO NORMATIVA PARA LA ARQUITECTURA VIGENTE.** Recorrido histórico de páginas ASPX/VB.NET, toolbar y servicios SOAP. Sus acciones heredadas no autorizan funcionalidades en la UI React actual. Para contratos vigentes de transferencia, consultar [data-model.md](../data-model.md); para persistencia MAPI, consultar [SCHEMA.md](../../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md). No ejecutar cambios de código, ORM, SQL ni permisos a partir de esta referencia.
+
 # Documento de diseño: flujo de páginas ASPX/VB y mapa hacia arquitectura moderna
 
 ## Objetivo

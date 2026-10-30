@@ -16,12 +16,17 @@ info:
     por los atributos de los controladores y los DTOs de
     `Bccr.Supen.Ves.Api/Codigo`. Las rutas versionadas usan el parámetro
     `api-version=1.0`.
-
-    Buenas prácticas conservadas de la especificación anterior: OpenAPI,
-    parámetros y respuestas tipados, respuestas HTTP explícitas y documentación
-    de autenticación. Las operaciones de candidatos, puestos y entrevistas de
-    LTI se eliminaron porque no pertenecen a VES.
   version: 1.0.0
+  x-documentation-review:
+    reviewDate: '2026-10-28'
+    status: 'Referencia parcial de VES; contratos y comportamiento por ambiente pendientes de verificar contra el código y pruebas de integración.'
+    scope: 'API de orquestación, no MAPI; las operaciones descritas son representativas, no exhaustivas.'
+    documentationLinks:
+      - './data-model.md'
+      - '../VES/Bccr.Supen.Ves.Api/SPEC.md'
+      - '../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md'
+    warning: 'No promover ejemplos ni x-verification-status del archivo a evidencia independiente del runtime.'
+
 
 servers:
   - url: https://localhost:44366

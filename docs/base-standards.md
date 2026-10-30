@@ -16,6 +16,8 @@ three equivalent layers of one application:
 | `Bccr.Supen.Ves.Api` | HTTP orchestration and service gateway; its `SI.SG` implementations call MAPI | .NET 8 / ASP.NET Core |
 | `Bccr.Supen.Ves.Mapi` | Business and data services; its `MAPI` controllers call `BW`, which calls `DA` and SQL Server | .NET 8 / ASP.NET Core, EF Core 8 |
 
+For data documentation, the active [API/MAPI DTO catalog](./data-model.md) is separate from the [MAPI SQL inventory](../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md). Historical Web Forms models are non-normative and belong in `docs/historical/`.
+
 The end-to-end flow is **UI → API → MAPI → database**. Within the API, the
 relevant flow is **API Controller → SI.SG → MAPI over HTTP**; within MAPI, it is
 **MAPI Controller → BW → DA → SQL Server**. `Abstracciones` contains contracts
@@ -24,42 +26,67 @@ shared deployment layer. Consult each component's `README.md`, `AGENT.md`, and
 technical documentation before applying a project-specific rule.
 
 
-### 0.1 Matriz de transformación:  → VES
+### 0.1 Transformation Matrix: Generic Criteria → VES
 
-> Se utiliza como fuente de disciplina de ingeniería y operación de agentes.
-> Cuando una regla genérica contradice la arquitectura, lenguaje, herramientas
-> o procesos reales de VES, prevalece el estándar VES y la documentación
-> específica del componente.
+> This matrix serves as a source of engineering discipline and agent-operating practices.
+> Whenever a generic rule conflicts with VES architecture, language, tooling, or actual processes, the VES standard and component-specific documentation take precedence.
 
-| Regla del documento 1 | Intención útil | Aplicación en VES |
+| Rule from document 1 | Useful intent | Application in VES |
 |---|---|---|
-| “Small tasks, one at a time” | Reducir riesgo y facilitar revisión | Cambios pequeños, coherentes e incrementales; no avanzar a trabajo ajeno al alcance |
-| TDD obligatorio | Proteger comportamiento y regresiones | Preferir pruebas que demuestren comportamiento; test-first cuando aporte valor y encaje con la tarea |
-| Todo el código debe estar tipado | Reducir errores por tipos | C# mantiene tipado estático; en UI JS/JSX usar validación, contratos y tooling existente sin imponer TypeScript |
-| Naming claro | Facilitar lectura y mantenimiento | Se conserva; aplicar convenciones específicas de frontend/backend |
-| Question assumptions | Evitar inferencias incorrectas | Verificar código, documentación y contratos antes de asumir |
-| Pattern detection | Detectar duplicación | Señalar patrones repetidos y abstraer solo cuando exista una regla común real |
-| English only | Uniformidad | No se traslada literalmente: VES usa principalmente español; conservar nombres externos cuando la compatibilidad lo requiera |
-| Skills en `ai-specs/skills` | Reutilización de instrucciones | Se conserva según la estructura documentada del proyecto |
-| Planning con modelo específico | Aumentar calidad de razonamiento | No imponer proveedor/modelo; usar el flujo y capacidad disponibles sin cambiar settings por una regla genérica |
-| `ai-specs` como fuente canónica universal | Evitar duplicación | Usar la ubicación canónica documentada para cada artefacto; no asumir que todo debe vivir en `ai-specs` |
-| Symlinks multiagente | Mantener portabilidad | Verificar referencias/symlinks cuando existan; no exigirlos donde no sean portables |
-| OpenSpec post-apply | Mantener especificación como fuente de verdad | Se conserva para cambios OpenSpec activos y se detalla el orden obligatorio |
+| “Small tasks, one at a time” | Reduce risk and simplify reviews | Make small, coherent, incremental changes; do not proceed to unrelated work |
+| Mandatory TDD | Protect behavior and prevent regressions | Prefer tests that demonstrate behavior; use test-first when it adds value and fits the task |
+| All code must be typed | Reduce type-related defects | C# is statically typed; use existing validation, contracts, and tooling in JS/JSX without imposing TypeScript |
+| Clear naming | Improve readability and maintenance | Retained; follow frontend- and backend-specific conventions |
+| Question assumptions | Avoid incorrect inferences | Verify code, documentation, and contracts before making assumptions |
+| Pattern detection | Identify duplication | Flag recurring patterns and extract abstractions only where there is a genuine shared rule |
+| English only | Consistency | Not adopted literally: VES primarily uses Spanish; preserve external names where compatibility requires them |
+| Skills in `ai-specs/skills` | Reuse instructions | Retained according to the documented project structure |
+| Planning with a specific model | Improve reasoning quality | Do not mandate a vendor/model; use the available workflow and capabilities without changing settings to satisfy a generic rule |
+| `ai-specs` as universal canonical source | Avoid duplication | Use the documented canonical location for each artifact; do not assume all artifacts must reside in `ai-specs` |
+| Multi-agent symlinks | Preserve portability | Verify references/symlinks where present; do not require them where they are not portable |
+| OpenSpec post-apply | Maintain specifications as the source of truth | Retained for active OpenSpec changes, with mandatory sequence defined below |
 
-### 0.2 Jerarquía de fuentes de verdad
+### 0.1.1 Analysis and Change-Control Rule
 
-Ante una discrepancia, usar este orden:
+For every request to review, expand, correct, or improve a user story:
 
-1. Requerimiento explícito del usuario o tarea actual.
-2. Artefactos activos de OpenSpec, cuando el trabajo pertenezca a un cambio OpenSpec.
-3. Documentación específica del componente afectado (`README.md`, `AGENT.md`,
-   `SPEC.md`, guías técnicas y estándares backend/frontend/documentación).
-4. Este `base-standards.md`.
-5. Buenas prácticas genéricas o conocimiento del agente.
+1. ALWAYS begin in read-only analysis mode.
+2. Verify the story against OpenSpec specifications, documentation, standards, and existing source code.
+3. Identify and justify every file proposed for modification.
+4. Present an analysis, impact matrix, and change plan before editing. These may be recorded in `historia.md` within the OpenSpec change.
+5. Obtain explicit user approval before modifying files, unless the current request expressly authorizes the change or an applicable skill defines an authorized documentation deliverable without further approval.
+6. MUST NOT interpret approval of a documentation proposal as authorization to modify source code or tests.
+7. Keep permissions separate for:
+   7.1. Specifications and documentation. A skill may expressly authorize its own documentation artifacts, such as `historia.md` for `enrich-us`.
+   7.2. Source code and tests. These ALWAYS require separate authorization.
+   7.3. Reading or updating Azure DevOps. This is permitted only when expressly authorized by the current request or an applicable skill, using existing work items without creating unrequested items.
+8. MUST NOT execute destructive commands or write operations during analysis. Explicitly authorized writes may occur only after analysis and within the authorized scope.
+9. **Fundamental rule: analysis and proposals do not authorize implementation.**
 
-No utilizar una recomendación genérica para invalidar una convención confirmada
-por el repositorio.
+### 0.2 Source-of-Truth Hierarchy
 
+When sources disagree, apply the following order:
+
+1. Explicit user requirements or the current task.
+2. Active OpenSpec artifacts, when work belongs to an OpenSpec change.
+3. Component-specific documentation (`README.md`, `AGENT.md`, `SPEC.md`, technical guides, and backend/frontend/documentation standards).
+4. This `base-standards.md`.
+5. Generic best practices or agent knowledge.
+
+Do not use a generic recommendation to override a convention confirmed in the repository.
+
+### 0.3 Documentation Ownership Rules for the VES Frontend
+
+- `docs/base-standards.md`: scope, approvals, OpenSpec, and cross-cutting discipline for UI/API/MAPI.
+- `docs/frontend-standards.md`: **the sole active implementation standard for React/JSX** (state, API, UX, tests, accessibility, and browser security). The [examples appendix](./frontend-examples.md) is illustrative, not a second standard.
+- `VES/Bccr.Supen.Ves.UI/SPEC.md`: declared UI behavior and architecture; cross-check against source code when a decision depends on its currency.
+- `VES/Bccr.Supen.Ves.UI/Documentacion/DEVELOPMENT.md` and `Deploy.md`: operational procedures, including build scripts that may alter versions/files.
+- `VES/Bccr.Supen.Ves.UI/Prototipo-UI/DESIGN-SYSTEM.md`, `DESIGN-HANDOFF.md`, and `LOGIN-SPEC.md`: **design/prototype sources within their scope**, not evidence that their MUI versions, resources, or simulated behaviors match the running product. Verify against `src/estilos/temaVes.js`, components, and manifests where present.
+- `USABILIDAD.md`: evidence for a documented branch and date; do not apply its claims to another branch without verification. `Pendientes-npm-audit.md` is a dated audit backlog, not a current `npm audit` result.
+- `docs/historical/`: Web Forms/VB.NET references and migration analysis; MUST NOT impose those patterns on React code.
+- Pending discrepancies in code, dependencies, design, security, routes, and environments are flagged **V** in `docs/VERIFICACIONES_PENDIENTES_FRONTEND.md`; do not resolve them automatically or disable controls.
+
+**Priority when resolving conflicts:** approved requirement and applicable OpenSpec → verified implementation/contract → component-specific standard → component technical documentation within its scope → base standard → historical prototype and generic recommendations. This complements, rather than replaces, hierarchy 0.2 and approval rule 0.1.1.
 
 ## 1. Core Principles
 
@@ -77,73 +104,62 @@ using each component's actual language, test framework, and architecture rather
 than as one-size-fits-all rules.
 
 
-### 1.1 Cambios pequeños y enfocados
+### 1.1 Small, Focused Changes
 
-> “Baby steps” se conserva como principio de reducción de riesgo, 
-> no como obligación de detener la tarea después de cada microcambio.
+> “Baby steps” remains a risk-reduction principle, not a requirement to stop after every micro-change.
 
-Reglas:
+Rules:
 
-- Mantener cada cambio limitado al objetivo solicitado.
-- Preferir modificaciones que puedan revisarse y validarse de forma aislada.
-- No mezclar refactorizaciones, upgrades, cambios de formato o limpieza general
-  con una funcionalidad no relacionada.
-- Si una tarea requiere varios archivos o capas, completar el conjunto mínimo
-  coherente necesario para que el comportamiento quede correcto.
-- No avanzar hacia una segunda funcionalidad solo porque se detectó durante la
-  implementación.
+- Keep each change limited to the requested objective.
+- Prefer modifications that can be independently reviewed and validated.
+- MUST NOT mix unrelated refactoring, upgrades, formatting, or general cleanup with a feature.
+- Where a task spans several files or layers, complete the smallest coherent set needed for correct behavior.
+- MUST NOT proceed to a second feature simply because it was discovered during implementation.
 
-**Evitar**
+**Avoid**
 
 ```text
-“Tengo que agregar un endpoint, así que también voy a actualizar paquetes,
-renombrar carpetas y reestructurar toda la solución.”
+“I need to add an endpoint, so I will also upgrade packages,
+rename folders, and restructure the entire solution.”
 ```
 
-**Recomendado**
+**Recommended**
 
 ```text
-“Implemento el endpoint, su contrato, la integración requerida y las pruebas
-pertinentes. Los demás hallazgos se documentan aparte.”
+“I will implement the endpoint, its contract, the required integration,
+and relevant tests. Other findings will be documented separately.”
 ```
 
-### 1.2 Pruebas y TDD
+### 1.2 Testing and TDD
 
-Aplicar test-first cuando:
+Apply test-first when:
 
-- el comportamiento puede expresarse claramente antes de implementar;
-- se corrige una regresión reproducible;
-- una regla de negocio tiene entradas/salidas verificables;
-- el componente ya posee una suite que facilita ese flujo.
+- the behavior can be clearly expressed before implementation;
+- fixing a reproducible regression;
+- a business rule has verifiable inputs and outputs;
+- the component already has a test suite that supports this workflow.
 
-No forzar TDD cuando:
+Do not force TDD when:
 
-- la tarea es únicamente documental o de configuración;
-- se trata de una investigación/exploración;
-- el componente no tiene infraestructura de prueba apropiada y crearla excede
-  el alcance;
-- el cambio es puramente visual y la validación adecuada es otra, aunque deben
-  agregarse pruebas de comportamiento si existe riesgo relevante.
+- the task concerns documentation or configuration only;
+- the task is research/exploration;
+- the component lacks suitable testing infrastructure and creating it exceeds scope;
+- the change is purely visual and another validation method is more appropriate, although behavioral tests should be added where material risks exist.
 
-Siempre que se cambie comportamiento existente, evaluar qué prueba previene la
-regresión.
+Whenever existing behavior changes, assess which test would prevent a regression.
 
-### 1.3 Seguridad de tipos y contratos
+### 1.3 Type Safety and Contracts
 
-- En .NET/C#, conservar tipos estáticos, nullable annotations, contratos y DTOs.
-- En la UI JavaScript/JSX, no introducir TypeScript como requisito transversal.
-  Usar las validaciones, contratos de API, linting y patrones documentados para
-  reducir errores.
-- No usar escapes del sistema de tipos (`dynamic`, `object`, casts o supresiones
-  injustificadas) en backend.
-- No inventar shapes de respuesta del API en frontend; verificar el contrato
-  existente.
+- In .NET/C#, preserve static types, nullable annotations, contracts, and DTOs.
+- In the JavaScript/JSX UI, MUST NOT introduce TypeScript as a cross-cutting requirement. Use documented validation, API contracts, linting, and existing patterns to reduce defects.
+- MUST NOT use type-system escape hatches (`dynamic`, `object`, casts, or unjustified suppressions) in backend code.
+- MUST NOT invent API response shapes in the frontend; verify the existing contract.
 
-### 1.4 Nombres claros
+### 1.4 Clear Naming
 
-Usar nombres que expresen intención de negocio o responsabilidad.
+Use names that communicate business intent or responsibility.
 
-**Evitar**
+**Avoid**
 
 ```text
 x
@@ -154,7 +170,7 @@ flag
 helper2
 ```
 
-**Preferir**
+**Prefer**
 
 ```text
 codigoEntidad
@@ -164,57 +180,53 @@ mensajeDeError
 configuracionEndpoint
 ```
 
-Las reglas exactas de casing, idioma, sufijos y nombres de archivo se definen en
-`backend-standards.md` y `frontend-standards.md`.
+Exact casing, language, suffix, and filename conventions are defined in `backend-standards.md` and `frontend-standards.md`.
 
-### 1.5 Cuestionar supuestos
+### 1.5 Question Assumptions
 
-> Antes de implementar una inferencia, buscar evidencia en el repositorio.
+> Before implementing an inference, seek evidence in the repository.
 
-Un agente o desarrollador debe distinguir entre:
+Agents and developers MUST distinguish:
 
-- **confirmado**: aparece en código, configuración o documentación vigente;
-- **inferido**: parece probable, pero no está confirmado;
-- **propuesto**: mejora sugerida que aún no forma parte del sistema.
+- **Confirmed:** supported by current code, configuration, or documentation.
+- **Inferred:** appears likely but has not been verified.
+- **Proposed:** a suggested improvement that does not yet exist in the system.
 
-Ejemplo:
+Example:
 
 ```text
-Confirmado: la UI consume Bccr.Supen.Ves.Api.
-Inferido: un endpoint nuevo probablemente seguirá una ruta similar a otro.
-Propuesto: crear una abstracción común para tres flujos repetidos.
+Confirmed: the UI consumes Bccr.Supen.Ves.Api.
+Inferred: a new endpoint will probably follow a route similar to an existing one.
+Proposed: create a shared abstraction for three repeated workflows.
 ```
 
-No presentar una inferencia o propuesta como si fuera parte existente de VES.
+MUST NOT present an inference or proposal as an existing part of VES.
 
-### 1.6 Detección de patrones sin sobrearquitectura
+### 1.6 Pattern Detection Without Overengineering
 
-> Detectar duplicación no implica abstraer inmediatamente.
+> Identifying duplication does not imply immediately creating an abstraction.
 
-Cuando se detecte código repetido:
+When repeated code is found:
 
-1. Determinar si representa la misma regla o solo una similitud superficial.
-2. Verificar si cambia por las mismas razones.
-3. Revisar si el proyecto ya tiene una abstracción equivalente.
-4. Extraer solo si mejora mantenibilidad, prueba o consistencia.
-5. Evitar frameworks internos, factories, wrappers o helpers genéricos sin una
-   necesidad demostrada.
+1. Determine whether it expresses the same rule or merely a superficial similarity.
+2. Check whether the instances change for the same reasons.
+3. Inspect whether the project already provides an equivalent abstraction.
+4. Extract only when doing so improves maintainability, testability, or consistency.
+5. Avoid internal frameworks, factories, wrappers, or generic helpers without a demonstrated need.
 
-“DRY” no debe convertirse en “abstraer todo”.
+“DRY” must not become “abstract everything.”
 
-### 1.7 Consistencia antes que preferencia personal
+### 1.7 Consistency Over Personal Preference
 
-No sustituir patrones existentes por la preferencia del desarrollador o agente
-cuando ambos sean técnicamente válidos.
+MUST NOT replace established patterns based solely on developer or agent preference when both options are technically sound.
 
-Ejemplos:
+Examples:
 
-- No cambiar MUI por otra biblioteca solo por preferencia.
-- No migrar MSTest a xUnit sin una tarea específica.
-- No convertir JS/JSX a TypeScript por una regla global.
-- No reemplazar contratos BCCR por una abstracción genérica propia.
-- No cambiar el idioma de identificadores públicos solo por estilo.
-
+- Do not replace MUI with another library based on preference.
+- Do not migrate MSTest to xUnit without a specific task.
+- Do not convert JS/JSX to TypeScript based on a global rule.
+- Do not replace BCCR contracts with a self-designed generic abstraction.
+- Do not change the language of public identifiers for stylistic reasons.
 
 ## 2. Language Standards
 - Use the language and naming conventions already established in the component.
@@ -227,66 +239,58 @@ Ejemplos:
   and conventions where compatibility requires them.
 
 
-### 2.1 Idioma y compatibilidad
+### 2.1 Language and Compatibility
 
-> El documento 1 exige inglés para código, documentación, Azure DevOps esquemas,
-> configuración, commits y tests. Esa regla no aplica totalmente  al repositorio VES.
+> Document 1 requires English for code, documentation, Azure DevOps, schemas, configuration, commits, and tests. That rule does not fully apply to the VES repository.
 
-Reglas VES:
+VES rules:
 
-- Mantener el idioma ya establecido en cada componente.
-- Español es válido y predominante en documentación y código de dominio VES.
-- Preservar nombres definidos externamente por contratos, frameworks,
-  bibliotecas, SQL, APIs o integraciones.
-- Evitar mezclar español e inglés dentro del mismo concepto sin necesidad.
-- No traducir nombres existentes si ello altera compatibilidad.
-- Los mensajes de error, tests y logs deben ser descriptivos y consistentes con
-  el módulo donde viven.
+- Preserve the language established in each component.
+- Spanish is valid and predominant in VES documentation and domain code.
+- Preserve names externally defined by contracts, frameworks, libraries, SQL, APIs, or integrations.
+- Avoid mixing Spanish and English within the same concept without a technical reason.
+- MUST NOT translate existing names where doing so would affect compatibility.
+- Error messages, tests, and logs must be descriptive and consistent with their owning module.
 
-**Ejemplo**
+**Example**
 
 ```text
-Correcto en un módulo VES en español:
+Valid in a Spanish-language VES module:
 codigoEntidad
 mensajeDeError
 ObtengaFondosAsync
 ```
 
-No renombrar estos identificadores a inglés únicamente para satisfacer una
-regla transversal antigua.
+MUST NOT rename these identifiers in English solely to comply with an outdated cross-cutting rule.
 
-### 2.2 Documentación y commits
+### 2.2 Documentation and Commits
 
-- La documentación nueva debe usar el idioma predominante del área.
-- Los commits deben seguir la convención real del repositorio/equipo.
-- No imponer inglés ni español si existe una convención explícita distinta.
-- Los nombres de archivos, artefactos OpenSpec o claves requeridas por una
-  herramienta deben conservar el formato que esa herramienta espera.
-
+- New documentation SHOULD use the predominant language of the owning area.
+- Commits MUST follow the actual repository/team convention.
+- MUST NOT impose English or Spanish where a different explicit convention exists.
+- Filenames, OpenSpec artifacts, and tool-required keys MUST retain the format expected by that tool.
 
 ## 3. Specific standards
 
 For detailed standards and guidelines specific to different areas of the project, refer to:
 
-- [Backend Standards](/docs/backend-standards.md) - API development, database patterns, testing, security and backend best practices
-- [Frontend Standards](/docs/frontend-standards.md) - React components, UI/UX guidelines, and frontend architecture
-- [Documentation Standards](/docs/documentation-standards.md) - Technical documentation structure, formatting, and maintenance guidelines, including AI standards like this document
-- [OpenSpec Tasks Mandatory Steps](/docs/openspec-tasks-mandatory-steps.md) - Required checklist and execution rules when creating or updating OpenSpec `tasks.md` files
+- Backend Standards (`docs/backend-standards.md`, file from the previous backend package) - API development, database patterns, testing, security and backend best practices
+- [Frontend Standards](./frontend-standards.md) - React components, UI/UX guidelines, and frontend architecture
+- Documentation Standards (`docs/documentation-standards.md`, outside this package) - Technical documentation structure, formatting, and maintenance guidelines, including AI standards like this document
+- OpenSpec Tasks Mandatory Steps (`docs/openspec-tasks-mandatory-steps.md`, outside this package) - Required checklist and execution rules when creating or updating OpenSpec `tasks.md` files
 
 
-### 3.1 Selección del estándar correcto
+### 3.1 Select the Correct Standard
 
-| Tipo de cambio | Documento principal |
+| Change type | Primary document |
 |---|---|
-| React, UI/UX, hooks, pruebas frontend | `frontend-standards.md` |
-| API .NET, MAPI, EF Core, SQL Server, pruebas backend | `backend-standards.md` |
-| Markdown, SPEC, README, guías y artefactos técnicos | `documentation-standards.md` |
-| Creación/actualización de `tasks.md` de OpenSpec | `openspec-tasks-mandatory-steps.md` |
-| Reglas transversales y portabilidad multiagente | `base-standards.md` |
+| React, UI/UX, hooks, frontend tests | `frontend-standards.md` |
+| .NET API, MAPI, EF Core, SQL Server, backend tests | `backend-standards.md` |
+| Markdown, SPEC, README, guides, and technical artifacts | `documentation-standards.md` |
+| Creating/updating OpenSpec `tasks.md` | `openspec-tasks-mandatory-steps.md` |
+| Cross-cutting rules and multi-agent portability | `base-standards.md` |
 
-Si una tarea cruza varias áreas, aplicar todos los estándares pertinentes sin
-forzar una arquitectura común entre componentes independientes.
-
+When a task spans several areas, apply all relevant standards without forcing independent components into a shared architecture.
 
 ## 4. Project Skills
 
@@ -295,36 +299,34 @@ forzar una arquitectura común entre componentes independientes.
 - Also load any referenced files in the skill folder (for example, `references/*.md`) when the skill requires them.
 
 
-### 4.1 Uso seguro de skills
+### 4.1 Safe Use of Skills
 
-> La carga automática de skills se conserva, pero una skill no puede sobreescribir silenciosamente
-> contratos reales del repositorio.
+> Automatic skill loading is retained, but a skill cannot silently override actual repository contracts.
 
-Cuando una tarea coincide con una skill:
+When a task matches a skill:
 
-1. Leer su `SKILL.md`.
-2. Leer referencias requeridas por esa skill.
-3. Verificar que las instrucciones aplican al componente actual.
-4. Resolver conflictos mediante la jerarquía de fuentes definida arriba.
-5. Ejecutar únicamente acciones compatibles con el alcance solicitado.
+1. Read its `SKILL.md`.
+2. Read the references required by the skill.
+3. Verify that its instructions apply to the current component.
+4. Resolve conflicts using the source-of-truth hierarchy above.
+5. Perform only actions compatible with the requested scope.
 
-No copiar una skill de otro stack como patrón obligatorio de VES sin validarla.
+MUST NOT copy a skill from another technology stack as a mandatory VES pattern without validation.
 
-### 4.2 Artefactos compartidos entre agentes
+### 4.2 Artifacts Shared Across Agents
 
-Cuando una skill, agente o referencia esté diseñada para múltiples asistentes:
+When a skill, agent, or reference is designed for multiple assistants:
 
-- mantener una única fuente canónica documentada;
-- evitar copias divergentes;
-- usar referencias o symlinks solo cuando sean compatibles con el sistema
-  operativo y repositorio;
-- documentar cualquier excepción necesaria.
+- Maintain one documented canonical source.
+- Avoid divergent copies.
+- Use references or symlinks only where compatible with the operating system and repository.
+- Document any necessary exceptions.
 
-## 5. Planning workflows
+## 5. Planning Workflows
 
 Use the planning workflow and model supported by the active tools and project.
 
-Planning workflows must run with Opus high reasoning o similar para planificación y decisiones complejas.
+Planning workflows SHOULD use an advanced-reasoning model equivalent to Opus for planning and complex decisions.
 
 This requirement applies to:
 - `enrich-us`
@@ -333,304 +335,269 @@ This requirement applies to:
 
 Do not change agent or model settings merely to satisfy a vendor-specific workspace rule.
 
-### 5.1 Estrategia explícita de modelos: planificación avanzada y ejecución eficiente
+### 5.1 Explicit Model Strategy: Advanced Planning and Efficient Execution
 
-> Se conserva explícitamente la intención de utilizar un modelo de razonamiento avanzado, similar a
-> **Opus**, para planificación y decisiones complejas, y un modelo de ejecución
-> sólido pero menos costoso, similar a **Sonnet**, para implementar trabajo cuya
-> especificación, arquitectura y reglas ya están claras. La regla se expresa por
-> **capacidad**, no por proveedor, para mantener portabilidad entre Claude,
-> GitHub Copilot, Cursor, Codex, Gemini u otras plataformas.
+> Explicitly preserve the intent to use an advanced-reasoning model, such as **Opus**, for planning and complex decisions, and a capable but more cost-efficient execution model, such as **Sonnet**, for implementing work whose specification, architecture, and rules are already clear. This rule is expressed in terms of **capabilities**, not vendors, so it remains portable across Claude, GitHub Copilot, Cursor, Codex, Gemini, and other platforms.
 
-#### Principio general
+#### General Principle
 
-Usar dos niveles lógicos de modelo:
+Use two logical model tiers:
 
 ```text
                  ┌──────────────────────────────┐
-                 │  MODELO DE PLANIFICACIÓN    │
-                 │  AVANZADO / OPUS-EQUIVALENT │
+                 │   ADVANCED PLANNING MODEL    │
+                 │       OPUS-EQUIVALENT        │
                  │                              │
-                 │  Analiza • Diseña • Decide  │
-                 │  Detecta riesgos • Planifica│
+                 │  Analyze • Design • Decide   │
+                 │  Identify risks • Plan       │
                  └──────────────┬───────────────┘
                                 │
-                         plan aprobado
+                         approved plan
                                 │
                                 ▼
                  ┌──────────────────────────────┐
-                 │   MODELO DE EJECUCIÓN       │
-                 │   SONNET-EQUIVALENT         │
+                 │      EXECUTION MODEL         │
+                 │      SONNET-EQUIVALENT       │
                  │                              │
-                 │ Implementa • Prueba • Ajusta│
-                 │ siguiendo reglas explícitas │
+                 │ Implement • Test • Refine    │
+                 │   following explicit rules   │
                  └──────────────┬───────────────┘
                                 │
-                         duda / desviación
+                        uncertainty / deviation
                                 │
                                 ▼
-                    ESCALAR AL PLANIFICADOR
+                    ESCALATE TO PLANNER
 ```
 
-Los nombres **Opus-equivalent** y **Sonnet-equivalent** describen niveles de
-capacidad, no productos obligatorios.
+The terms **Opus-equivalent** and **Sonnet-equivalent** denote capability levels, not mandatory products.
 
-- **Opus-equivalent**: el modelo de mayor capacidad de razonamiento disponible
-  y adecuado a la tecnología involucrada.
-- **Sonnet-equivalent**: un modelo de desarrollo general competente, más
-  eficiente, capaz de seguir con precisión especificaciones, estándares,
-  contratos y tareas ya definidas.
+- **Opus-equivalent:** the most capable reasoning model available that is suitable for the technology involved.
+- **Sonnet-equivalent:** a competent, more efficient general-purpose development model that can accurately follow established specifications, standards, contracts, and tasks.
 
-La selección debe considerar además el stack de la tarea. Para una modificación
-.NET, el modelo avanzado debe demostrar buen desempeño en C#/.NET/arquitectura;
-para frontend, en React/JavaScript/Vite/MUI; para datos, en SQL Server/EF Core;
-para OpenSpec, en análisis de requisitos y consistencia documental.
+Model selection MUST also consider the task's technology stack. For .NET changes, the advanced model must perform well with C#/.NET and architecture; for frontend, React/JavaScript/Vite/MUI; for data, SQL Server/EF Core; for OpenSpec, requirements analysis and documentation consistency.
 
-#### Cuándo usar obligatoriamente un modelo Opus-equivalent
+#### When an Opus-Equivalent Model Is Mandatory
 
-Usar el modelo avanzado para **planificar o revisar** cuando la tarea incluya
-uno o más de estos factores:
+Use an advanced model for **planning or reviewing** when the task includes one or more of the following:
 
-- cambios arquitectónicos;
-- cambios que atraviesan UI → API → MAPI → base de datos;
-- definición o modificación de contratos entre componentes;
-- decisiones de seguridad, autenticación, autorización, certificados o datos
-  sensibles;
-- diseño de nuevos patrones, abstracciones o componentes compartidos;
-- cambios de esquema, stored procedures o integración con DBA;
-- migraciones tecnológicas;
-- cambios de dependencias con impacto transversal;
-- análisis de concurrencia, rendimiento o resiliencia;
-- refactorizaciones amplias;
-- requisitos ambiguos o con varias interpretaciones válidas;
-- enriquecimiento de historias, especificaciones o cambios OpenSpec complejos;
-- elaboración del plan de implementación para una funcionalidad de varias
-  capas;
-- revisión de una solución cuando un error persiste después de intentos
-  razonables;
-- evaluación de hallazgos que puedan cambiar el alcance original.
+- architectural changes;
+- changes spanning UI → API → MAPI → database;
+- defining or modifying inter-component contracts;
+- security, authentication, authorization, certificate, or sensitive-data decisions;
+- designing new patterns, abstractions, or shared components;
+- schema, stored procedure, or DBA integration changes;
+- technology migrations;
+- dependency changes with cross-cutting impact;
+- concurrency, performance, or resilience analysis;
+- large-scale refactoring;
+- ambiguous requirements or requirements with multiple valid interpretations;
+- enriching complex user stories, specifications, or OpenSpec changes;
+- producing an implementation plan for a multi-layer feature;
+- reviewing a solution after an error persists despite reasonable attempts;
+- assessing findings that could change the original scope.
 
-El modelo avanzado debe producir, como mínimo cuando aplique:
+Where applicable, the advanced model MUST produce at least:
 
-1. entendimiento del requerimiento;
-2. supuestos confirmados y pendientes;
-3. arquitectura/componentes afectados;
-4. contratos que deben preservarse;
-5. archivos o áreas probables de cambio;
-6. riesgos técnicos;
-7. estrategia de pruebas;
-8. orden de implementación;
-9. criterios de aceptación/verificación;
-10. restricciones explícitas sobre lo que **no** debe modificarse.
+1. Understanding of the requirement.
+2. Confirmed and unresolved assumptions.
+3. Affected architecture/components.
+4. Contracts that must be preserved.
+5. Files or areas likely to change.
+6. Technical risks.
+7. Test strategy.
+8. Implementation order.
+9. Acceptance/verification criteria.
+10. Explicit restrictions on what **must not** be modified.
 
-#### Cuándo usar un modelo Sonnet-equivalent
+#### When to Use a Sonnet-Equivalent Model
 
-Una vez que el plan, reglas y contratos están claros, utilizar un modelo de
-ejecución eficiente para:
+Once the plan, rules, and contracts are clear, use an efficient execution model to:
 
-- crear o modificar código siguiendo un plan aprobado;
-- implementar endpoints ya diseñados;
-- crear componentes React con comportamiento especificado;
-- adaptar DTOs o mappings ya definidos;
-- escribir pruebas cuyos escenarios ya están determinados;
-- aplicar cambios repetitivos o mecánicos;
-- corregir linting, formato o warnings bien comprendidos;
-- actualizar documentación conforme a decisiones ya tomadas;
-- ejecutar refactorizaciones locales explícitamente descritas;
-- implementar tareas de `tasks.md` suficientemente detalladas;
-- realizar ajustes derivados de una revisión cuando la corrección sea
-  inequívoca.
+- create or modify code following an approved plan;
+- implement already-designed endpoints;
+- create React components with specified behavior;
+- adapt already-defined DTOs or mappings;
+- write tests for predefined scenarios;
+- perform repetitive or mechanical changes;
+- fix well-understood lint, formatting, or warning issues;
+- update documentation to reflect decisions already made;
+- execute explicitly described local refactoring;
+- implement sufficiently detailed `tasks.md` tasks;
+- apply review corrections when the required fix is unambiguous.
 
-El modelo de ejecución **no debe reinterpretar la arquitectura ni ampliar el
-alcance por iniciativa propia**. Su función principal es materializar de forma
-consistente las decisiones ya establecidas.
+The execution model **MUST NOT independently reinterpret the architecture or expand the scope**. Its primary responsibility is to implement established decisions consistently.
 
-#### Regla de escalamiento al modelo avanzado
+#### Escalation Rule for Advanced Reasoning
 
-El modelo Sonnet-equivalent debe detener la decisión local y escalar nuevamente
-a un Opus-equivalent cuando aparezca cualquiera de estas situaciones:
+The Sonnet-equivalent model MUST stop making local design decisions and escalate to an Opus-equivalent model whenever:
 
-- la implementación contradice el plan;
-- descubre una arquitectura diferente de la asumida;
-- falta un contrato necesario;
-- debe decidir entre varias alternativas arquitectónicas relevantes;
-- encuentra impacto no previsto en otro componente;
-- el cambio exige modificar seguridad o permisos;
-- requiere introducir una nueva dependencia;
-- necesita cambiar una interfaz pública;
-- encuentra una posible pérdida de compatibilidad;
-- un test revela que la especificación puede estar equivocada;
-- el cambio solicitado afecta artefactos OpenSpec no contemplados;
-- se requieren cambios sustanciales en stored procedures/esquema;
-- existe riesgo significativo de datos, rendimiento o concurrencia;
-- la solución implica una excepción a los estándares del proyecto.
+- implementation contradicts the plan;
+- the discovered architecture differs from assumptions;
+- a required contract is missing;
+- a decision between significant architectural alternatives is required;
+- unexpected impact on another component is found;
+- security or permissions must change;
+- a new dependency must be introduced;
+- a public interface must change;
+- backward compatibility could be lost;
+- a test suggests the specification itself might be incorrect;
+- the requested change affects unanticipated OpenSpec artifacts;
+- substantial stored procedure/schema changes are required;
+- significant data, performance, or concurrency risks arise;
+- the solution requires an exception to project standards.
 
-El escalamiento no significa abandonar la tarea. Significa devolver la nueva
-información a la etapa de razonamiento avanzado, actualizar el plan y luego
-continuar la ejecución.
+Escalation does not mean abandoning the task. It means returning the new information to advanced reasoning, updating the plan, and then resuming execution.
 
-#### Matriz de selección de modelo
+#### Model Selection Matrix
 
-| Tipo de trabajo | Modelo recomendado | Motivo |
+| Work type | Recommended model | Rationale |
 |---|---|---|
-| Cambio textual simple y acotado | Sonnet-equivalent | Reglas claras, bajo riesgo |
-| Corrección local con causa conocida | Sonnet-equivalent | Ejecución directa |
-| Implementación de tarea OpenSpec detallada | Sonnet-equivalent | El diseño ya está definido |
-| Creación de tests para comportamiento especificado | Sonnet-equivalent | Escenarios conocidos |
-| Nueva historia con ambigüedad | Opus-equivalent | Requiere análisis |
-| Diseño API/MAPI | Opus-equivalent | Contratos y arquitectura |
-| Cambio UI + API + MAPI | Opus-equivalent | Impacto transversal |
-| Seguridad/autenticación | Opus-equivalent | Alto riesgo |
-| Modelo de datos/SQL complejo | Opus-equivalent | Riesgo de integridad/rendimiento |
-| Refactorización transversal | Opus-equivalent | Decisiones estructurales |
-| Investigación de bug difícil | Opus-equivalent inicialmente | Necesita diagnóstico |
-| Fix mecánico después del diagnóstico | Sonnet-equivalent | Solución ya determinada |
-| Revisión final de cambio de alto riesgo | Opus-equivalent | Validación independiente de decisiones |
+| Simple, narrowly scoped text change | Sonnet-equivalent | Clear rules, low risk |
+| Local fix with a known cause | Sonnet-equivalent | Straightforward execution |
+| Implementation of a detailed OpenSpec task | Sonnet-equivalent | Design already defined |
+| Tests for specified behavior | Sonnet-equivalent | Known scenarios |
+| Ambiguous new user story | Opus-equivalent | Requires analysis |
+| API/MAPI design | Opus-equivalent | Contracts and architecture |
+| UI + API + MAPI change | Opus-equivalent | Cross-cutting impact |
+| Security/authentication | Opus-equivalent | High risk |
+| Complex data model/SQL | Opus-equivalent | Integrity/performance risk |
+| Cross-cutting refactoring | Opus-equivalent | Structural decisions |
+| Difficult bug investigation | Opus-equivalent initially | Requires diagnosis |
+| Mechanical fix after diagnosis | Sonnet-equivalent | Solution already determined |
+| Final review of a high-risk change | Opus-equivalent | Independent validation of decisions |
 
-#### Ejemplos por tecnología
+#### Technology-Specific Examples
 
-**Backend .NET / API / MAPI**
+**.NET Backend / API / MAPI**
 
 ```text
 Opus-equivalent:
-- decide dónde pertenece una nueva regla entre API, SG, MAPI, BW y DA;
-- revisa contratos, seguridad, transacciones y estrategia de pruebas.
+- decides which layer owns a new rule among API, SG, MAPI, BW, and DA;
+- reviews contracts, security, transactions, and test strategy.
 
 Sonnet-equivalent:
-- implementa las clases/métodos definidos;
-- agrega DI siguiendo patrones existentes;
-- crea las pruebas MSTest/xUnit;
-- ejecuta correcciones locales.
+- implements the defined classes/methods;
+- adds DI following existing patterns;
+- creates MSTest/xUnit tests;
+- performs local corrections.
 ```
 
-**Frontend React**
+**React Frontend**
 
 ```text
 Opus-equivalent:
-- determina ownership del estado;
-- decide composición de componentes;
-- analiza integración con API, accesibilidad y riesgos de UX.
+- determines state ownership;
+- decides component composition;
+- analyzes API integration, accessibility, and UX risks.
 
 Sonnet-equivalent:
-- implementa JSX/hooks según el diseño;
-- crea pruebas Vitest/RTL;
-- aplica tokens MUI y reglas responsive ya establecidas.
+- implements JSX/hooks according to the design;
+- creates Vitest/RTL tests;
+- applies established MUI tokens and responsive rules.
 ```
 
 **SQL Server / EF Core**
 
 ```text
 Opus-equivalent:
-- analiza frontera transaccional, impacto del SP, rendimiento y compatibilidad.
+- analyzes transaction boundaries, stored procedure impact,
+  performance, and compatibility.
 
 Sonnet-equivalent:
-- implementa el acceso DA parametrizado ya diseñado;
-- agrega mappings y pruebas definidas.
+- implements the already-designed parameterized DA access;
+- adds defined mappings and tests.
 ```
 
-**OpenSpec / requisitos**
+**OpenSpec / Requirements**
 
 ```text
 Opus-equivalent:
-- enriquece requerimientos;
-- detecta ambigüedades y escenarios;
-- diseña el cambio y las tareas.
+- enriches requirements;
+- identifies ambiguities and scenarios;
+- designs the change and its tasks.
 
 Sonnet-equivalent:
-- ejecuta tasks.md una vez que requisitos, escenarios y restricciones están
-  suficientemente definidos.
+- executes tasks.md once requirements, scenarios, and constraints are
+  sufficiently defined.
 ```
 
-#### No asociar “modelo más avanzado” con “hacer todo”
+#### Do Not Equate “More Advanced Model” with “Do Everything”
 
-El modelo Opus-equivalent no debe utilizarse para ejecutar mecánicamente todo el
-cambio solo por ser más capaz. Su mayor valor está en:
+The Opus-equivalent model SHOULD NOT mechanically implement the entire change merely because it is more capable. Its greatest value lies in:
 
-- razonamiento;
-- planificación;
-- arquitectura;
-- ambigüedad;
-- revisión de alto riesgo.
+- reasoning;
+- planning;
+- architecture;
+- ambiguity resolution;
+- high-risk reviews.
 
-El modelo Sonnet-equivalent debe recibir instrucciones suficientemente claras
-para “maquilar” —implementar de forma disciplinada— sin tener que rediseñar la
-solución.
+The Sonnet-equivalent model SHOULD receive sufficiently clear instructions to carry out disciplined implementation without redesigning the solution.
 
-#### Independencia del proveedor
+#### Vendor Independence
 
-Ejemplos de nombres comerciales pueden cambiar con el tiempo. Por ello, la
-regla normativa es:
+Commercial model names may change over time. The normative rule is therefore:
 
 ```text
-PLANIFICACIÓN COMPLEJA
-→ modelo de razonamiento avanzado disponible para el stack
+COMPLEX PLANNING
+→ advanced-reasoning model available for the stack
 → Opus-equivalent
 
-EJECUCIÓN CON REGLAS CLARAS
-→ modelo competente y eficiente de propósito general/código
+EXECUTION UNDER CLEAR RULES
+→ competent, efficient general-purpose/coding model
 → Sonnet-equivalent
 ```
 
-Si una plataforma no ofrece dos modelos distintos, usar el **nivel de
-razonamiento/configuración** que más se aproxime a estas dos funciones.
+If a platform does not offer two separate models, use the **reasoning effort/configuration level** that best matches these two functions.
 
-No modificar automáticamente configuraciones persistentes del usuario,
-repositorio o IDE para cambiar de modelo salvo que el flujo de la herramienta
-lo requiera y esté expresamente autorizado. La selección de modelo debe hacerse
-preferentemente mediante el mecanismo normal de la sesión/agente.
+MUST NOT automatically change persistent user, repository, or IDE configuration to switch models unless required by the tool workflow and expressly authorized. Prefer normal session/agent model-selection mechanisms.
 
-### 5.2 Patrón de ejecución recomendado
+### 5.2 Recommended Execution Pattern
 
-Para tareas de código o estándares:
+For code or standards tasks:
 
 ```text
-1. INSPECCIONAR
+1. INSPECT
    ↓
-2. CONFIRMAR ARQUITECTURA/CONTRATOS
+2. CONFIRM ARCHITECTURE/CONTRACTS
    ↓
-3. DEFINIR CAMBIO MÍNIMO
+3. DEFINE MINIMAL CHANGE
    ↓
-4. IMPLEMENTAR
+4. IMPLEMENT
    ↓
-5. VALIDAR
+5. VALIDATE
    ↓
-6. REVISAR CAMBIOS COLATERALES
+6. REVIEW INCIDENTAL CHANGES
    ↓
-7. INFORMAR RESULTADO
+7. REPORT RESULTS
 ```
 
-#### Inspeccionar
+#### Inspect
 
-Leer primero los archivos directamente relacionados y la documentación
-específica del componente.
+First read the directly relevant files and component-specific documentation.
 
-#### Confirmar
+#### Confirm
 
-Distinguir hechos de inferencias. Verificar versiones, contratos, nombres y
-patrones antes de generar código.
+Distinguish facts from inferences. Verify versions, contracts, names, and patterns before generating code.
 
-#### Cambio mínimo
+#### Minimal Change
 
-Definir qué archivos deben cambiar y cuáles no.
+Determine which files must change and which must not.
 
-#### Implementar
+#### Implement
 
-Seguir convenciones existentes y no introducir dependencias innecesarias.
+Follow existing conventions and avoid unnecessary dependencies.
 
-#### Validar
+#### Validate
 
-Ejecutar las comprobaciones documentadas por el componente: build, lint, tests,
-análisis estático o validación de artefactos según corresponda.
+Run the component's documented checks, such as build, lint, tests, static analysis, or artifact validation, as appropriate.
 
-#### Revisar cambios colaterales
+#### Review Incidental Changes
 
-Confirmar que no se modificaron versiones, paquetes, contratos, estilos o
-archivos no relacionados accidentalmente.
+Confirm that versions, packages, contracts, styles, or unrelated files were not modified accidentally.
 
-#### Informar
+#### Report
 
-Resumir qué cambió, qué se validó y cualquier limitación real.
-
+Summarize what changed, what was validated, and any real limitations.
 
 ## 6. Symlink Integrity and Multi-Agent Portability
 
@@ -640,42 +607,37 @@ Resumir qué cambió, qué se validó y cualquier limitación real.
 - **Completion Gate**: Verify affected references after moving files. Do not require symlinks where they are unsupported or would make a BCCR checkout non-portable.
 
 
-### 6.1 Reglas de integridad de referencias
+### 6.1 Reference Integrity Rules
 
-> Se conserva la intención de una fuente canónica y referencias multiagente, pero no se asume que
-> `ai-specs` sea la ubicación canónica para todo.
+> Preserve the intent of a canonical source and multi-agent references, but do not assume that `ai-specs` is the canonical location for everything.
 
-Al mover, renombrar o cambiar la extensión de un artefacto:
+Whenever an artifact is moved, renamed, or its extension changes:
 
-1. Buscar referencias internas.
-2. Verificar symlinks existentes.
-3. Actualizar rutas relativas.
-4. Revisar documentación que lo enlace.
-5. Verificar que la solución siga funcionando en los sistemas operativos
-   soportados por el equipo.
+1. Search for internal references.
+2. Verify existing symlinks.
+3. Update relative paths.
+4. Review documentation that links to it.
+5. Confirm the solution still works on the team's supported operating systems.
 
-**Cambio incompleto**
+**Incomplete change**
 
 ```text
-Se renombró ai-specs/skills/x/SKILL.md
-pero .claude/... o .cursor/... siguen apuntando al nombre anterior.
+ai-specs/skills/x/SKILL.md was renamed,
+but .claude/... or .cursor/... still point to its previous name.
 ```
 
-**Cambio correcto**
+**Correct change**
 
 ```text
-Se renombró el artefacto, se actualizaron las referencias afectadas y se
-verificó que no quedaron targets obsoletos.
+The artifact was renamed, affected references were updated, and
+no obsolete symlink targets remained.
 ```
 
-### 6.2 Evitar duplicación de fuentes canónicas
+### 6.2 Avoid Duplicating Canonical Sources
 
-No crear copias independientes del mismo estándar para distintos agentes si
-pueden referenciar una fuente común.
+MUST NOT create independent copies of the same standard for different agents when they can reference a common source.
 
-Si una herramienta no soporta symlinks o el repositorio debe funcionar en un
-entorno donde estos no sean portables, usar el mecanismo documentado para esa
-herramienta y dejar clara la relación con la fuente original.
+If a tool does not support symlinks, or the repository must operate in an environment where they are not portable, use that tool's documented alternative and clearly describe its relationship to the original source.
 
 ## 7. Mandatory OpenSpec Artifact Updates for Post-Apply Changes
 
@@ -690,189 +652,158 @@ For an active change:
 2. Regenerate artifacts when required by the workflow.
 3. Implement and verify against the updated artifacts before archiving.
 
-### 7.1 Principio de fuente de verdad durante un cambio OpenSpec
+### 7.1 Source-of-Truth Principle During an OpenSpec Change
 
-> Entre `opsx:apply` y `opsx:archive`, una petición adicional que cambie requisitos no debe
-> implementarse directamente como un parche informal.
+> Between `opsx:apply` and `opsx:archive`, an additional request that changes requirements MUST NOT be implemented directly as an informal patch.
 
-La secuencia obligatoria es:
-
-```text
-Nuevo requerimiento/cambio
-        ↓
-Actualizar requisitos/escenarios
-        ↓
-Actualizar tasks.md
-        ↓
-Regenerar artefactos si corresponde
-        ↓
-Implementar
-        ↓
-Verificar contra artefactos actualizados
-        ↓
-Archivar cuando el cambio esté completo
-```
-
-No etiquetar automáticamente una nueva necesidad funcional como “bugfix” si en
-realidad modifica el diseño o alcance del cambio activo.
-
-### 7.2 Cuándo NO aplica esta regla
-
-No aplicar el workflow OpenSpec a:
-
-- trabajo ordinario fuera de un cambio OpenSpec activo;
-- consultas o análisis que no modifican el proyecto;
-- tareas puramente operativas que la documentación del proyecto trate por otro
-  flujo.
-
-No crear artefactos OpenSpec innecesarios únicamente porque este documento los
-menciona.
-
-### 7.3 Ejemplo
-
-**Evitar**
+The mandatory sequence is:
 
 ```text
-Después de apply aparece un nuevo requisito.
-Se modifica directamente el código.
-tasks.md y escenarios permanecen desactualizados.
+New requirement/change
+        ↓
+Update requirements/scenarios
+        ↓
+Update tasks.md
+        ↓
+Regenerate artifacts if applicable
+        ↓
+Implement
+        ↓
+Verify against updated artifacts
+        ↓
+Archive when the change is complete
 ```
 
-**Recomendado**
+Do not automatically label a new functional requirement a “bugfix” if it actually changes the design or scope of the active change.
+
+### 7.2 When This Rule Does NOT Apply
+
+Do not apply the OpenSpec workflow to:
+
+- ordinary work outside an active OpenSpec change;
+- inquiries or analysis that do not modify the project;
+- purely operational tasks that project documentation governs through another workflow.
+
+MUST NOT create unnecessary OpenSpec artifacts merely because this document mentions them.
+
+### 7.3 Example
+
+**Avoid**
 
 ```text
-Se actualizan primero los requisitos, escenarios y tareas afectados.
-Después se implementa y se valida contra la especificación revisada.
+A new requirement appears after apply.
+The source code is modified directly.
+tasks.md and scenarios remain outdated.
 ```
 
-## 8. Reglas transversales para cambios de dependencias y configuración
-
-> Las tareas enfocadas no deben introducir cambios de infraestructura accidental.
-
-- No actualizar paquetes como efecto secundario de una funcionalidad.
-- No cambiar versiones de runtime/framework sin una tarea explícita.
-- No introducir una dependencia nueva si la plataforma ya ofrece una solución
-  equivalente.
-- Antes de agregar una dependencia, justificar necesidad, alcance, seguridad,
-  mantenimiento y compatibilidad.
-- No cambiar configuración de agentes, IDEs o herramientas del usuario salvo
-  que la tarea lo requiera explícitamente.
-- No incluir secretos, tokens o credenciales en estándares, ejemplos o
-  configuración versionada.
-
-## 9. Manejo de hallazgos fuera de alcance
-
-Si durante una tarea se detecta un problema no relacionado:
-
-1. No modificarlo automáticamente.
-2. Determinar si bloquea la tarea actual.
-3. Si bloquea, realizar el cambio mínimo necesario y documentar la razón.
-4. Si no bloquea, reportarlo como hallazgo separado.
-
-Ejemplo:
+**Recommended**
 
 ```text
-Tarea: agregar validación a un endpoint.
-Hallazgo: otro módulo usa un paquete obsoleto.
-
-Acción correcta: no actualizar el paquete dentro del mismo cambio salvo que
-impida implementar o validar la tarea.
+First update the affected requirements, scenarios, and tasks.
+Then implement and validate against the revised specification.
 ```
 
-## 10. Criterio de finalización
+## 8. Cross-Cutting Rules for Dependency and Configuration Changes
 
-Una tarea técnica no se considera completa únicamente porque “el código está
-escrito”.
+> Focused tasks MUST NOT introduce accidental infrastructure changes.
 
-Según el tipo de cambio, verificar:
+- MUST NOT upgrade packages as a side effect of implementing a feature.
+- MUST NOT change runtime/framework versions without an explicit task.
+- MUST NOT introduce a new dependency when the platform already offers an equivalent solution.
+- Before adding a dependency, justify its necessity, scope, security, maintenance, and compatibility.
+- MUST NOT change agent, IDE, or user tool configuration unless expressly required by the task.
+- MUST NOT include secrets, tokens, or credentials in standards, examples, or version-controlled configuration.
 
-- comportamiento solicitado implementado;
-- arquitectura y contratos preservados;
-- tests pertinentes agregados/actualizados;
-- pruebas/build/lint aplicables ejecutados;
-- warnings relevantes revisados;
-- documentación/artefactos actualizados cuando cambie el comportamiento o
-  proceso;
-- referencias y symlinks válidos si se movieron artefactos;
-- ningún secreto o dato sensible añadido;
-- ningún cambio colateral no relacionado;
-- OpenSpec actualizado cuando corresponda.
+## 9. Handling Out-of-Scope Findings
 
-## 11. Recomendaciones de `base-standards_1.md` que NO se trasladan literalmente
+If an unrelated issue is discovered while working on a task:
 
-- **English Only:** VES usa principalmente español; se conserva la consistencia
-  lingüística, no el inglés obligatorio.
-- **TDD obligatorio para toda funcionalidad:** se conserva como práctica
-  recomendada cuando aporta valor; las pruebas siguen siendo obligatorias
-  según riesgo, comportamiento y estándar del componente.
-- **Todo el código completamente tipado:** se aplica naturalmente a C#; no se
-  usa para imponer TypeScript a la UI JavaScript/JSX.
-- **Nunca avanzar más de un paso:** se transforma en cambios pequeños,
-  incrementales y verificables sin obligar a interrumpir un flujo coherente.
-- **Claude Opus como producto obligatorio:** se sustituye por la categoría
-  **Opus-equivalent**: el modelo de razonamiento más avanzado disponible y
-  adecuado al stack para planificación, arquitectura y decisiones complejas.
-- **Claude Sonnet como producto obligatorio:** se sustituye por la categoría
-  **Sonnet-equivalent**: un modelo competente y eficiente para implementar
-  planes, tareas y reglas ya claramente definidas.
-- **Modificar `.claude/settings.json` automáticamente:** no se usa como mecanismo
-  transversal. La selección de nivel/modelo debe realizarse mediante el flujo
-  normal de la herramienta, salvo autorización explícita.
-- **Cambio automático Opus/Sonnet por nombre comercial:** no se exige una marca;
-  sí se exige respetar la separación lógica entre planificación avanzada y
-  ejecución eficiente cuando la plataforma lo permita.
-- **`ai-specs` como ubicación canónica para cualquier personalización:** solo
-  cuando la documentación del proyecto lo establezca.
-- **Symlinks obligatorios en todos los agentes:** se usan cuando sean
-  compatibles y estén documentados; la portabilidad prevalece.
+1. Do not automatically modify it.
+2. Determine whether it blocks the current task.
+3. If it blocks the task, make the smallest necessary change and document the reason.
+4. Otherwise, report it separately.
 
-## 12. Checklist base para desarrolladores y agentes
+Example:
 
-### Antes de cambiar
+```text
+Task: add validation to an endpoint.
+Finding: another module uses an outdated package.
 
-- [ ] Clasifiqué la tarea como planificación compleja o ejecución con reglas
-      claras.
-- [ ] Seleccioné un modelo Opus-equivalent cuando hay decisiones
-      arquitectónicas, ambigüedad o alto riesgo.
-- [ ] Si el trabajo ya está suficientemente especificado, puedo usar un modelo
-      Sonnet-equivalent para la implementación.
-- [ ] Identifiqué el componente real afectado.
-- [ ] Leí su estándar específico.
-- [ ] Revisé README/AGENT/SPEC o documentación relevante.
-- [ ] Distinguí hechos, inferencias y propuestas.
-- [ ] Confirmé el alcance solicitado.
-- [ ] Verifiqué si existe un cambio OpenSpec activo aplicable.
+Correct action: do not upgrade the package in the same change unless
+it prevents implementation or validation of the task.
+```
 
-### Durante el cambio
+## 10. Completion Criteria
 
-- [ ] Si el ejecutor encuentra una decisión no prevista, escala al modelo
-      Opus-equivalent antes de rediseñar por su cuenta.
-- [ ] Mantengo el cambio pequeño y enfocado.
-- [ ] Sigo la arquitectura existente.
-- [ ] Uso nombres claros.
-- [ ] No introduzco una tecnología o patrón por preferencia personal.
-- [ ] No actualizo paquetes ni runtime sin necesidad explícita.
-- [ ] No modifico contratos públicos por estilo.
-- [ ] No duplico lógica sin evaluar primero si representa la misma regla.
-- [ ] No creo abstracciones especulativas.
-- [ ] Mantengo el idioma y naming del componente.
-- [ ] No introduzco secretos.
+A technical task is not considered complete merely because “the code has been written.”
 
-### Validación
+Depending on the change, verify that:
 
-- [ ] Agregué/actualicé pruebas pertinentes al comportamiento.
-- [ ] Ejecuté build/lint/tests según el componente.
-- [ ] Revisé warnings y análisis estático aplicables.
-- [ ] Verifiqué que no haya cambios colaterales.
-- [ ] Actualicé documentación si el comportamiento/proceso cambió.
-- [ ] Verifiqué symlinks/referencias si moví artefactos.
-- [ ] Actualicé OpenSpec antes del código si correspondía.
+- the requested behavior is implemented;
+- the architecture and contracts are preserved;
+- relevant tests were added/updated;
+- applicable tests/build/lint checks were executed;
+- relevant warnings were reviewed;
+- documentation/artifacts were updated where behavior or processes changed;
+- references and symlinks remain valid if artifacts were moved;
+- no secrets or sensitive data were added;
+- no unrelated incidental changes were made;
+- OpenSpec was updated where applicable.
 
-### Antes de cerrar
+## 11. Recommendations from `base-standards_1.md` NOT Adopted Literally
 
-- [ ] El resultado satisface el requerimiento original.
-- [ ] Puedo explicar qué cambió y por qué.
-- [ ] Puedo indicar qué validaciones se ejecutaron.
-- [ ] Cualquier limitación o hallazgo fuera de alcance quedó claramente
-      documentado.
+- **English Only:** VES primarily uses Spanish; linguistic consistency is retained, but mandatory English is not.
+- **Mandatory TDD for every feature:** retained as a recommended practice when useful; tests remain required according to risk, behavior, and component standards.
+- **All code must be fully typed:** naturally applies to C#; MUST NOT be used to impose TypeScript on the JavaScript/JSX UI.
+- **Never advance more than one step:** adapted into small, incremental, verifiable changes without forcing interruption of a coherent workflow.
+- **Claude Opus as a mandatory product:** replaced by the **Opus-equivalent** category: the most capable advanced-reasoning model available and suitable for the stack for planning, architecture, and complex decisions.
+- **Claude Sonnet as a mandatory product:** replaced by the **Sonnet-equivalent** category: a competent, efficient model for implementing already-defined plans, tasks, and rules.
+- **Automatically modify `.claude/settings.json`:** not adopted as a cross-cutting mechanism. Select model/effort through the tool's normal workflow unless expressly authorized otherwise.
+- **Automatically switch between Opus/Sonnet by commercial name:** no particular brand is required; retain the logical separation of advanced planning and efficient execution where the platform allows it.
+- **`ai-specs` as the canonical location for every customization:** only where project documentation expressly establishes it.
+- **Mandatory symlinks for all agents:** use only where compatible and documented; portability takes precedence.
 
+## 12. Base Checklist for Developers and Agents
+
+### Before Making Changes
+
+- [ ] I classified the task as complex planning or execution under clear rules.
+- [ ] I selected an Opus-equivalent model where architectural decisions, ambiguity, or high risk are present.
+- [ ] If the work is sufficiently specified, I can use a Sonnet-equivalent model for implementation.
+- [ ] I identified the actual affected component.
+- [ ] I read its component-specific standard.
+- [ ] I reviewed its README/AGENT/SPEC or relevant documentation.
+- [ ] I distinguished facts, inferences, and proposals.
+- [ ] I confirmed the requested scope.
+- [ ] I checked whether an applicable active OpenSpec change exists.
+
+### During the Change
+
+- [ ] If the execution model encounters an unforeseen design decision, it escalates to the Opus-equivalent model rather than redesigning independently.
+- [ ] I keep the change small and focused.
+- [ ] I follow the existing architecture.
+- [ ] I use clear names.
+- [ ] I do not introduce a technology or pattern based solely on personal preference.
+- [ ] I do not upgrade packages or runtime without an explicit need.
+- [ ] I do not modify public contracts for stylistic reasons.
+- [ ] I do not duplicate logic without first determining whether it represents the same rule.
+- [ ] I do not create speculative abstractions.
+- [ ] I preserve the component's established language and naming conventions.
+- [ ] I do not introduce secrets.
+
+### Validation
+
+- [ ] I added/updated relevant behavior tests.
+- [ ] I ran build/lint/tests as appropriate for the component.
+- [ ] I reviewed applicable warnings and static-analysis results.
+- [ ] I verified there are no unrelated incidental changes.
+- [ ] I updated documentation where behavior/processes changed.
+- [ ] I verified symlinks/references if I moved artifacts.
+- [ ] I updated OpenSpec before changing code where required.
+
+### Before Closing
+
+- [ ] The result meets the original requirement.
+- [ ] I can explain what changed and why.
+- [ ] I can identify which validations were actually executed.
+- [ ] Any limitation or out-of-scope finding has been clearly documented.

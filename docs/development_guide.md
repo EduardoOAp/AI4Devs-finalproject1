@@ -1,75 +1,41 @@
-# Guía de desarrollo VES
+# VES Development Guide
 
-Guía de entrada para configurar y trabajar en los tres componentes BCCR de
-VES. Las prácticas
-que siguen vigentes —mantener credenciales fuera del repositorio, probar los
-cambios, usar pasos reproducibles y ejecutar cada servicio de forma aislada—
-se conservan con las herramientas reales de VES.
+Getting-started guide for setting up and working with the three BCCR VES components. Practices that remain applicable—keeping credentials out of the repository, testing changes, following reproducible steps, and running each service independently—are retained using the actual VES toolchain.
 
+## 0. How to Use This Guide
 
-## 0. Cómo usar esta guía
+Use this guide to:
 
-> **Comentario — Adaptado de `development_guide_1.md`:** La guía anterior
-> estaba organizada como un recorrido operativo de instalación → configuración
-> → base de datos → backend → frontend → pruebas. Se conserva esa intención
-> paso a paso, pero se reemplazan completamente las tecnologías y comandos LTI
-> por los componentes reales de VES.
+1. verify prerequisites;
+2. obtain or access the three projects;
+3. configure each component securely;
+4. start MAPI, API, and UI;
+5. validate the end-to-end flow;
+6. run the appropriate tests;
+7. troubleshoot common failures without weakening security.
 
-Esta guía sirve para:
+Do not use this guide as a substitute for the `README.md`, `AGENT.md`, `SPEC.md`, or component-specific technical documentation in each repository. Where they differ, component-specific documentation takes precedence.
 
-1. comprobar prerrequisitos;
-2. obtener/acceder a los tres proyectos;
-3. configurar cada componente de forma segura;
-4. iniciar MAPI, API y UI;
-5. validar el flujo completo;
-6. ejecutar las pruebas correctas;
-7. diagnosticar fallos frecuentes sin debilitar seguridad.
+### 0.1 Security Rule for Reusing Historical Documentation
 
-No utilizar esta guía como sustituto de los `README.md`, `AGENT.md`, `SPEC.md`
-o documentos técnicos específicos de cada repositorio. Cuando exista una
-diferencia, prevalece la documentación específica del componente.
+Never copy the following from historical documentation:
 
-### 0.1 Matriz de transformación desde `development_guide_1.md`
-
-| Tema del documento 1 | LTI | Equivalencia VES |
-|---|---|---|
-| Repositorio | `AI4Devs-LTI-extended` | Repositorios BCCR `Bccr.Supen.Ves.UI`, `Bccr.Supen.Ves.Api`, `Bccr.Supen.Ves.Mapi` |
-| Frontend | Node + CRA | React 19 + Vite + Node 24.18.0 |
-| Backend | Node/Express | .NET 8 / ASP.NET Core |
-| Base de datos | PostgreSQL en Docker | SQL Server de desarrollo accesible por red BCCR |
-| ORM | Prisma | EF Core 8 + stored procedures |
-| Migraciones | Prisma Migrate | No generar migraciones EF; coordinar cambios de esquema con DBA |
-| Secretos | `.env` con credenciales | User Secrets/configuración segura/pipeline; nunca credenciales reales versionadas |
-| Backend tests | npm/Jest | MSTest/xUnit según proyecto |
-| Frontend tests | Jest/Cypress | Vitest + React Testing Library |
-| E2E | Cypress | No introducir Cypress; usar suites actuales |
-| Ejecución full stack | frontend/backend local | MAPI → API → UI |
-| Configuración frontend | `REACT_APP_*` | `config/{ambiente}.json` + `NODE_CONFIG_ENV` + Vite |
-| API frontend | URL `.env` | `Constantes.js` + configuración efectiva de VES |
-
-### 0.2 Regla de seguridad al reutilizar documentación histórica
-
-> **Comentario — Seguridad:** `development_guide_1.md` contiene ejemplos de
-> credenciales y cadenas de conexión propios de LTI. **No se trasladan ni deben
-> reutilizarse** en VES.
-
-Nunca copiar desde documentación histórica:
-
-- contraseñas;
-- usuarios de base de datos;
-- cadenas de conexión;
+- passwords;
+- database user accounts;
+- connection strings;
 - tokens;
-- certificados;
-- URLs internas no confirmadas;
-- secretos de `.env`.
+- certificates;
+- unverified internal URLs;
+- `.env` secrets.
 
-Usar únicamente los mecanismos y accesos autorizados para VES.
+Use only mechanisms and access permissions authorized for VES.
 
+Contract and procedure locations are listed in the [VES documentation index](./INDICE_DOCUMENTAL.md). This guide focuses on preparing and verifying the three components. Coding rules are defined in the specialized standards, and OpenSpec instructions are defined in the [mandatory steps](./openspec-tasks-mandatory-steps.md).
 
-## 1. Arquitectura y responsabilidades
+## 1. Architecture and Responsibilities
 
 ```text
-Navegador
+Browser
    │
    ▼
 Bccr.Supen.Ves.UI (React 19 / Vite)
@@ -86,47 +52,31 @@ Bccr.Supen.Ves.Mapi (.NET 8)
 SQL Server
 ```
 
-Son tres componentes separados, no tres capas de una sola solución:
+These are three separate components, not three layers within a single solution:
 
-| Carpeta | Responsabilidad |
+| Directory | Responsibility |
 |---|---|
-| `Bccr.Supen.Ves.UI` | SPA de STI y SEC; consume únicamente la API |
-| `Bccr.Supen.Ves.Api` | Orquesta las solicitudes HTTP y llama al MAPI a través de `SI.SG` |
-| `Bccr.Supen.Ves.Mapi` | Lógica de negocio (`BW`) y acceso a datos (`DA`) |
+| `Bccr.Supen.Ves.UI` | STI and SEC SPA; communicates exclusively with the API |
+| `Bccr.Supen.Ves.Api` | Orchestrates HTTP requests and invokes MAPI through `SI.SG` |
+| `Bccr.Supen.Ves.Mapi` | Business logic (`BW`) and data access (`DA`) |
 
-La UI no debe llamar directamente a MAPI ni a SQL Server. Los contratos y DTOs
-en `Bccr.Supen.Ves.Abstracciones` pertenecen a sus respectivas soluciones; no
-son una biblioteca compartida entre las tres carpetas.
+The UI MUST NOT call MAPI or SQL Server directly. Contracts and DTOs in `Bccr.Supen.Ves.Abstracciones` belong to their respective solutions; they are not a shared library across all three directories.
 
-## 2. Requisitos y acceso
+## 2. Prerequisites and Access
 
-- Para UI: Node.js **24.18.0**, npm y Git. La versión está fijada en
-  `Bccr.Supen.Ves.UI/Codigo/.nvmrc`; el repositorio también incluye Node
-  portátil bajo `Codigo/.tools/`.
-- Para API y MAPI: .NET 8 SDK. Visual Studio 2022, Rider o VS Code con la
-  extensión de C# son opciones de desarrollo.
-- Para restaurar paquetes .NET y acceder a los servicios y bases de datos de
-  desarrollo puede ser necesaria la red/VPN BCCR y autenticación en los feeds
-  NuGet privados.
-- Para ejecutar el MAPI se requiere conectividad a los servidores SQL de
-  desarrollo. No se necesita Docker ni una base PostgreSQL local para esta
-  solución.
-- Para depurar la API con IIS Express se requiere el soporte de IIS Express
-  provisto por Visual Studio. La ejecución del MAPI también está documentada
-  con `dotnet run`.
+- **UI:** Node.js **24.18.0**, npm, and Git. The version is pinned in `Bccr.Supen.Ves.UI/Codigo/.nvmrc`; the repository also includes portable Node.js under `Codigo/.tools/`.
+- **API and MAPI:** .NET 8 SDK. Visual Studio 2022, Rider, or VS Code with the C# extension can be used for development.
+- Restoring .NET packages and accessing development services and databases may require the BCCR network/VPN and authentication to private NuGet feeds.
+- Running MAPI requires connectivity to development SQL servers. This solution does not require Docker or a local PostgreSQL database.
+- Debugging the API with IIS Express requires the IIS Express support provided by Visual Studio. MAPI execution with `dotnet run` is also documented.
 
-Confirma los requisitos específicos y las versiones de paquetes en el README,
-los `.csproj` y los archivos de configuración del proyecto correspondiente.
-No instales herramientas globales o dependencias adicionales sin necesidad.
+Verify component-specific requirements and package versions in the corresponding README, `.csproj`, and configuration files. Do not install global tools or extra dependencies unnecessarily.
 
+### 2.1 Preflight Checks Before Installation or Execution
 
-### 2.1 Preflight antes de instalar o ejecutar
+> **Note — Adapted from `development_guide_1.md`:** The original requirement to check prerequisites before setup is retained, using the actual versions and dependencies of each component.
 
-> **Comentario — Adaptado de `development_guide_1.md`:** Se conserva la idea de
-> verificar prerrequisitos antes del setup, pero usando las versiones y
-> dependencias reales de cada componente.
-
-Antes de continuar, comprobar:
+Before proceeding, check the following.
 
 #### UI
 
@@ -136,14 +86,13 @@ npm --version
 git --version
 ```
 
-La versión de Node debe corresponder con:
+The Node.js version MUST match:
 
 ```text
 Bccr.Supen.Ves.UI/Codigo/.nvmrc
 ```
 
-Actualmente la guía del proyecto fija Node `24.18.0`; confirmar siempre el
-archivo del repositorio antes de instalar otra versión.
+The project guide currently specifies Node.js `24.18.0`; always verify the repository file before installing another version.
 
 #### API / MAPI
 
@@ -153,59 +102,50 @@ dotnet --list-sdks
 git --version
 ```
 
-Debe existir un SDK .NET 8 compatible con los `.csproj`.
+A .NET 8 SDK compatible with the `.csproj` files MUST be available.
 
-#### Conectividad
+#### Connectivity
 
-Confirmar, según la tarea:
+Confirm the following as applicable to the task:
 
-- acceso a red/VPN BCCR;
-- acceso a feeds NuGet privados;
-- permisos para SQL Server de desarrollo si se ejecutará MAPI;
-- acceso al certificado cliente si el ambiente requiere mTLS;
-- acceso al repositorio correspondiente.
+- BCCR network/VPN access;
+- access to private NuGet feeds;
+- development SQL Server permissions if MAPI will run;
+- access to the client certificate if the environment requires mTLS;
+- access to the relevant repository.
 
-### 2.2 No instalar por anticipado
+### 2.2 Do Not Install Tools Preemptively
 
-No instalar por defecto:
+Do not install the following by default:
 
 - Docker;
 - PostgreSQL;
 - Prisma;
 - Cypress;
-- herramientas globales npm;
-- SDKs adicionales;
-- paquetes NuGet externos.
+- global npm tools;
+- additional SDKs;
+- external NuGet packages.
 
-Instalar algo nuevo únicamente si el proyecto actual lo requiere y la
-documentación específica lo confirma.
+Install new tools only when required by the actual project and confirmed by component-specific documentation.
 
+## 3. Obtain the Projects
 
-## 3. Obtener los proyectos
+In this workspace, all three directories are already available under `VES/`. When cloning them separately, follow the BCCR-approved repository and access instructions in each project's README:
 
-En este workspace, los tres directorios ya están disponibles bajo `VES/`.
-Cuando se clonen por separado, usa las instrucciones de repositorio y acceso
-aprobadas por BCCR que figuran en el README de cada proyecto:
+- [UI: README and development](../VES/Bccr.Supen.Ves.UI/README.md)
+- [API: README](../VES/Bccr.Supen.Ves.Api/README.md)
+- [MAPI: README](../VES/Bccr.Supen.Ves.Mapi/README.md)
 
-- [UI: README y desarrollo](../Bccr.Supen.Ves.UI/README.md)
-- [API: README](../Bccr.Supen.Ves.Api/README.md)
-- [MAPI: README](../Bccr.Supen.Ves.Mapi/README.md)
+### 3.1 Verification After Obtaining the Source Code
 
-No uses la URL ni las instrucciones de clonación de LTI que aparecían en la
-versión previa de esta guía.
+Once each repository is available:
 
+1. verify that the expected branch is checked out;
+2. read `README.md` and `AGENT.md`;
+3. review version and configuration files before installing dependencies;
+4. do not copy `.env`, `appsettings`, or configuration files from another project.
 
-### 3.1 Verificación después de obtener el código
-
-Una vez disponible cada repositorio:
-
-1. verificar que se está en la rama esperada;
-2. leer el `README.md` y `AGENT.md`;
-3. revisar archivos de versión/configuración antes de ejecutar instalaciones;
-4. no copiar `.env`, `appsettings` ni configuraciones de otro proyecto;
-5. no sustituir configuración BCCR con archivos del proyecto LTI.
-
-Comandos Git útiles para confirmar contexto:
+Useful Git commands for confirming the current context:
 
 ```bash
 git status
@@ -213,144 +153,103 @@ git branch --show-current
 git remote -v
 ```
 
-Estos comandos son de inspección; no modifican el repositorio.
+These are inspection commands and do not modify the repository.
 
-
-## 4. Configuración segura
+## 4. Secure Configuration
 
 ### UI
 
-La configuración por ambiente está en
-`Bccr.Supen.Ves.UI/Codigo/config/{ambiente}.json`, combinada con
-`config/default.json`. `NODE_CONFIG_ENV` selecciona el ambiente durante
-Vite build/dev; `vite.config.mjs` expone la configuración al bundle como
-`__APP_CONFIG__`.
+Environment-specific configuration lives in `Bccr.Supen.Ves.UI/Codigo/config/{ambiente}.json` and is merged with `config/default.json`. `NODE_CONFIG_ENV` selects the environment during Vite build/development; `vite.config.mjs` exposes the configuration to the browser bundle as `__APP_CONFIG__`.
 
-- Para desarrollo local, la UI apunta por defecto a
-  `http://localhost:62525/` (API local).
-- No fijar URLs de API en componentes ni modificar `Constantes.js` para
-  cambiar ambientes.
-- Todo valor incluido en el bundle del navegador es visible al usuario. Nunca
-  colocar credenciales, claves privadas o secretos en `Codigo/config/` ni
-  en el `.env` del frontend.
-- El repositorio UI documenta un valor heredado `ENCRYPTION_KEY` como pendiente
-  de gestión segura; no agregar ni replicar secretos en ese archivo.
+- For local development, the UI defaults to `http://localhost:62525/` (local API).
+- Do not hardcode API URLs in components or edit `Constantes.js` to switch environments.
+- Any value bundled into browser code is visible to end users. Never store credentials, private keys, or secrets in `Codigo/config/` or the frontend `.env`.
+- The UI repository documents a legacy `ENCRYPTION_KEY` value as pending secure management; do not add or replicate secrets in that file.
 
 ### API
 
-La URL del MAPI se configura mediante `ApiEndpoints` y la configuración por
-ambiente. En desarrollo puede apuntar al MAPI compartido o a una instancia
-local; consulta el README de API y `Codigo/API/appsettings.Development.json`.
-No introduzcas secretos en archivos versionados ni cambies tokens que resuelve
-el pipeline.
+The MAPI URL is configured through `ApiEndpoints` and environment-specific settings. In development it may point to a shared MAPI instance or a local one; consult the API README and `Codigo/API/appsettings.Development.json`. Do not place secrets in version-controlled files or modify tokens resolved by the pipeline.
 
-La API requiere el certificado cliente para comunicarse con MAPI en los
-ambientes que aplican mTLS. Los decoradores que omiten el certificado son
-exclusivos de `Development`; no se deben trasladar a Staging/QA/Producción.
+The API requires a client certificate to communicate with MAPI in environments enforcing mTLS. Certificate-bypass decorators are exclusive to `Development` and MUST NOT be carried into Staging, QA, or Production.
 
-### MAPI y SQL Server
+### MAPI and SQL Server
 
-Los valores `#{token}#` de configuración se sustituyen en el despliegue. El
-`appsettings.Development.json` contiene configuración de referencia, no debe
-contener credenciales personales.
+Configuration placeholders in the form `#{token}#` are substituted during deployment. `appsettings.Development.json` contains reference configuration and MUST NOT contain personal credentials.
 
-Para desarrollo local, usa **User Secrets** según la guía de MAPI:
+For local development, use **User Secrets** as described in the MAPI guide:
 
 ```powershell
 cd VES\Bccr.Supen.Ves.Mapi\Codigo\MAPI
 dotnet user-secrets set "ConnectionStrings:BDSupen" "<cadena de conexión local autorizada>"
 ```
 
-Configura las otras cadenas de conexión que la operación requiera siguiendo
-`Bccr.Supen.Ves.Mapi/README.md`. El identificador de User Secrets está asociado
-al proyecto .NET; consulta el `.csproj` antes de asumirlo.
+Configure other required connection strings according to `Bccr.Supen.Ves.Mapi/README.md`. The User Secrets ID is associated with the .NET project; inspect its `.csproj` rather than assuming the identifier.
 
-No incluyas contraseñas, tokens, certificados privados ni cadenas de conexión
-reales en comandos guardados, Markdown, logs o commits. User Secrets se almacena
-en el perfil local y no debe copiarse al repositorio. En integración y
-producción las conexiones usan la identidad del proceso/IIS según configuración
-de infraestructura.
+Do not include passwords, tokens, private certificates, or real connection strings in saved commands, Markdown, logs, or commits. User Secrets reside in the local user profile and MUST NOT be copied into the repository. Integration and production connections use the process/IIS identity according to infrastructure configuration.
 
-El esquema SQL Server y los stored procedures los administra DBA. No generar
-migraciones EF ni cambiar el esquema como parte de una tarea ordinaria de
-aplicación; coordinar cambios con DBA.
+The DBA owns the SQL Server schema and stored procedures. Do not generate EF migrations or change the schema as part of ordinary application work; coordinate such changes with the DBA.
 
+### 4.1 Configuration Checklist by Component
 
-### 4.1 Checklist de configuración por componente
-
-> **Comentario — Adaptado de `development_guide_1.md`:** La guía anterior
-> pedía crear `.env` para frontend/backend. En VES la misma necesidad de
-> configuración por ambiente se resuelve con mecanismos distintos.
+> **Note — Adapted from `development_guide_1.md`:** The previous guide instructed developers to create `.env` files for frontend/backend. VES addresses the same environment configuration need through different mechanisms.
 
 #### UI
 
-Antes de iniciar:
+Before starting:
 
-- confirmar el ambiente seleccionado por `NODE_CONFIG_ENV`;
-- revisar `config/default.json` y `config/{ambiente}.json`;
-- comprobar la URL efectiva del API;
-- verificar que no se haya introducido un secreto al bundle;
-- no editar `Constantes.js` únicamente para “apuntar” a otro ambiente.
+- confirm the environment selected by `NODE_CONFIG_ENV`;
+- review `config/default.json` and `config/{ambiente}.json`;
+- verify the effective API URL;
+- verify that no secrets are included in the bundle;
+- do not edit `Constantes.js` merely to point to another environment.
 
 #### API
 
-Antes de iniciar:
+Before starting:
 
-- revisar `ApiEndpoints`;
-- confirmar la URL efectiva del MAPI;
-- verificar el ambiente de ASP.NET Core;
-- confirmar si se requiere certificado cliente;
-- no usar decoradores/bypass de Development en otros ambientes.
+- review `ApiEndpoints`;
+- confirm the effective MAPI URL;
+- verify the ASP.NET Core environment;
+- determine whether a client certificate is required;
+- do not use `Development` bypasses/decorators in other environments.
 
 #### MAPI
 
-Antes de iniciar:
+Before starting:
 
-- confirmar conectividad SQL;
-- configurar únicamente las cadenas necesarias mediante User Secrets o el
-  mecanismo autorizado;
-- revisar los tokens/configuración efectiva;
-- no editar stored procedures ni esquema para lograr que el ambiente local
-  “funcione”.
+- confirm SQL connectivity;
+- configure only the required connection strings using User Secrets or another authorized mechanism;
+- review the effective tokens/configuration;
+- do not edit stored procedures or the schema merely to make the local environment work.
 
-### 4.2 Configuración no es secreto
+### 4.2 Configuration Is Not a Secret
 
-Distinguir:
+Distinguish between:
 
 ```text
-Configuración:
-- host lógico
+Configuration:
+- logical host
 - timeout
-- nombre de endpoint
-- feature/config flags no sensibles
+- endpoint name
+- non-sensitive feature/config flags
 
-Secreto:
+Secret:
 - password
 - private key
 - client secret
 - token
-- connection string con credenciales
+- connection string containing credentials
 ```
 
-Todo valor que llega al navegador es público. En backend, los secretos deben
-permanecer fuera del repositorio y resolverse mediante los mecanismos
-autorizados.
+All values delivered to the browser are public. Backend secrets MUST remain outside the repository and be resolved through authorized mechanisms.
 
+## 5. Run Locally
 
-## 5. Ejecutar localmente
+Services can be started independently. To test the full flow with local instances, start MAPI first, then API, and finally UI. Alternatively, the API may target the shared development MAPI.
 
-Los servicios se pueden iniciar independientemente. Para probar el flujo
-completo con instancias locales, iniciar primero MAPI, después API y por último
-la UI. También se puede apuntar API al MAPI compartido de desarrollo.
+### 5.0 Recommended Sequence for a Fully Local Environment
 
-
-### 5.0 Secuencia recomendada para un entorno totalmente local
-
-> **Comentario — Adaptado de `development_guide_1.md`:** Igual que la guía LTI
-> separaba database/backend/frontend, VES debe iniciarse respetando las
-> dependencias reales entre servicios.
-
-Para ejecutar los tres componentes localmente:
+To run all three components locally:
 
 ```text
 1. MAPI
@@ -360,45 +259,42 @@ Para ejecutar los tres componentes localmente:
 3. UI
 ```
 
-Motivo:
+Reason:
 
-- MAPI necesita acceso a SQL Server;
-- API necesita un MAPI accesible;
-- UI necesita un API accesible.
+- MAPI requires SQL Server access;
+- API requires an accessible MAPI;
+- UI requires an accessible API.
 
-No es obligatorio ejecutar los tres localmente. El API puede apuntar a un MAPI
-compartido de desarrollo cuando el procedimiento del equipo lo permita.
+Running all three locally is not mandatory. The API may point to a shared development MAPI if team procedures allow it.
 
-### 5.0.1 Checkpoint antes de iniciar el siguiente componente
+### 5.0.1 Checkpoint Before Starting the Next Component
 
-Antes de avanzar:
+Before proceeding, verify:
 
 **MAPI**
-- compiló;
-- inició sin error de configuración;
-- escucha en el perfil/puerto efectivo;
-- tiene conectividad requerida a SQL Server.
+- the build succeeded;
+- the process started without configuration errors;
+- the service listens on the effective profile/port;
+- the required SQL Server connectivity is available.
 
 **API**
-- compiló;
-- inició;
-- `ApiEndpoints` apunta al MAPI correcto;
-- el health check responde;
-- mTLS/configuración corresponden al ambiente.
+- the build succeeded;
+- the process started;
+- `ApiEndpoints` points to the correct MAPI;
+- the health check responds;
+- mTLS and other configuration match the environment.
 
 **UI**
-- dependencias instaladas;
-- Vite inicia;
-- la configuración efectiva apunta al API esperado;
-- el navegador puede alcanzar el API.
+- dependencies are installed;
+- Vite starts;
+- effective configuration points to the expected API;
+- the browser can reach the API.
 
-No asumir el puerto únicamente por esta guía. Confirmar siempre la salida del
-proceso, `launchSettings.json` y la configuración efectiva.
-
+Do not assume ports solely from this guide. Always verify process output, `launchSettings.json`, and effective configuration.
 
 ### 5.1 MAPI
 
-Desde el repositorio/carpeta MAPI:
+From the MAPI repository/directory:
 
 ```powershell
 cd VES\Bccr.Supen.Ves.Mapi\Codigo
@@ -408,13 +304,11 @@ cd MAPI
 dotnet run
 ```
 
-Según el README del MAPI, `dotnet run` escucha normalmente en
-`https://localhost:5001` y `http://localhost:5000`; confirma el puerto en la
-salida local y `Properties/launchSettings.json`.
+According to the MAPI README, `dotnet run` normally listens on `https://localhost:5001` and `http://localhost:5000`; confirm the ports in local output and `Properties/launchSettings.json`.
 
-### 5.2 API de orquestación
+### 5.2 Orchestration API
 
-Restaura y compila la solución:
+Restore and build the solution:
 
 ```powershell
 cd VES\Bccr.Supen.Ves.Api\Codigo
@@ -422,13 +316,9 @@ dotnet restore Bccr.Supen.Ves.Api.sln
 dotnet build Bccr.Supen.Ves.Api.sln
 ```
 
-En Visual Studio, ejecuta el perfil `IIS-development` documentado por el
-proyecto. La URL local indicada es `https://localhost:44366`. Asegúrate de que
-`ApiEndpoints` apunta a la instancia local de MAPI o al servicio compartido.
-También se puede ejecutar el proyecto `API` con `dotnet run` usando el perfil
-y configuración de desarrollo correctos.
+In Visual Studio, run the `IIS-development` profile documented by the project. The documented local URL is `https://localhost:44366`. Ensure `ApiEndpoints` points either to the local MAPI instance or to the shared service. The `API` project can also be run with `dotnet run` using the appropriate development profile and configuration.
 
-Health check del API:
+API health check:
 
 ```text
 GET https://localhost:44366/healthcheck?api-version=1
@@ -436,7 +326,7 @@ GET https://localhost:44366/healthcheck?api-version=1
 
 ### 5.3 UI
 
-Desde la carpeta `Codigo` de UI:
+From the UI `Codigo` directory:
 
 ```powershell
 cd VES\Bccr.Supen.Ves.UI\Codigo
@@ -444,77 +334,62 @@ npm install
 npm start
 ```
 
-Vite sirve la UI en `http://localhost:3000`. En su configuración
-`localdev`, la UI apunta a `http://localhost:62525/`. Ejecuta el API en esa
-dirección o configura la UI según el procedimiento de desarrollo documentado
-por el equipo.
+Vite serves the UI at `http://localhost:3000`. Its `localdev` configuration targets `http://localhost:62525/`. Run the API at that address or configure the UI according to the team's documented development procedure.
 
-Para crear un build local sin cambiar la versión:
+To produce a local build without changing the version:
 
 ```powershell
 npm run build:local
 ```
 
-Los scripts `build:pruebas` y `build:produccion` incrementan la versión de
-`package.json`; no los ejecutes como validación rutinaria local.
+The `build:pruebas` and `build:produccion` scripts increment the version in `package.json`; do not run them for routine local validation.
 
+### 5.4 Minimum Manual End-to-End Verification
 
-### 5.4 Verificación manual mínima del flujo
+After starting the required components:
 
-Después de iniciar los componentes necesarios:
+1. verify that MAPI started successfully;
+2. check the API health endpoint;
+3. open the UI;
+4. execute only a known, safe functional flow;
+5. inspect browser console and network errors;
+6. confirm that the UI calls the API rather than MAPI directly;
+7. confirm that error responses do not expose sensitive data.
 
-1. comprobar que MAPI inició correctamente;
-2. comprobar el health check del API;
-3. abrir la UI;
-4. ejecutar únicamente un flujo funcional seguro y conocido;
-5. revisar errores de red/consola;
-6. confirmar que la UI llama al API y no directamente a MAPI;
-7. confirmar que no se muestran datos sensibles en errores.
+Manual validation complements, but does not replace, automated tests.
 
-La validación manual complementa, pero no sustituye, las pruebas automatizadas.
+### 5.5 Ports and Profiles: Avoid Assumptions
 
-### 5.5 Puertos y perfiles: evitar supuestos
+This guide documents multiple profiles/URLs because components can run using different mechanisms (for example, IIS Express, `dotnet run`, or `localdev` configuration).
 
-Esta guía documenta varios perfiles/URLs porque los componentes pueden ejecutarse
-con mecanismos diferentes (por ejemplo IIS Express, `dotnet run` o configuración
-`localdev`).
+Therefore:
 
-Por ello:
+- do not change code merely to match an expected port;
+- confirm the actual port in runtime output;
+- inspect `launchSettings.json`, `ApiEndpoints`, and Vite configuration;
+- align configuration according to team procedures.
 
-- no cambiar código para hacer coincidir un puerto “esperado”;
-- confirmar el puerto real en la salida de ejecución;
-- revisar `launchSettings.json`, `ApiEndpoints` y configuración Vite;
-- alinear la configuración siguiendo el procedimiento del equipo.
+## 6. Testing and Verification
 
+Run the checks applicable to the directory you changed.
 
-## 6. Pruebas y verificaciones
+### 6.0 Quick Validation Matrix
 
-Ejecuta las verificaciones de la carpeta que modificaste.
-
-
-### 6.0 Matriz rápida de validación
-
-> **Comentario — Adaptado de `development_guide_1.md`:** Se conserva la
-> separación de pruebas por componente, sustituyendo npm/Jest/Cypress del
-> proyecto LTI por las suites reales de VES.
-
-| Cambio realizado | Validación mínima |
+| Change made | Minimum validation |
 |---|---|
-| Solo UI | `npm run lint` + `npm test` + `npm run build:local` |
-| Solo API | `dotnet build` + `dotnet test` de la solución API |
-| Solo MAPI | `dotnet build` + `dotnet test` de la solución MAPI |
-| API ↔ MAPI | Pruebas de ambos componentes + verificación del contrato |
-| UI ↔ API | Pruebas UI/API pertinentes + verificación de ruta/configuración |
-| UI ↔ API ↔ MAPI | Validaciones de los tres + flujo integrado controlado |
-| Cambio SQL/SP | Validación de aplicación + coordinación/validación DBA |
+| UI only | `npm run lint` + `npm test` + `npm run build:local` |
+| API only | `dotnet build` + `dotnet test` for the API solution |
+| MAPI only | `dotnet build` + `dotnet test` for the MAPI solution |
+| API ↔ MAPI | Tests for both components + contract verification |
+| UI ↔ API | Relevant UI/API tests + route/configuration verification |
+| UI ↔ API ↔ MAPI | Checks for all three components + controlled integrated flow |
+| SQL/SP change | Application validation + DBA coordination/verification |
 
-No ejecutar herramientas de otro proyecto para “cumplir” una checklist:
-Cypress, Prisma o Jest no forman parte del flujo actual de VES.
-
+Do not run tools from another project merely to satisfy a checklist: Cypress, Prisma, and Jest are not part of the current VES workflow.
 
 ### UI
 
-Desde `Bccr.Supen.Ves.UI/Codigo/`:
+From `Bccr.Supen.Ves.UI/Codigo/`:
 
 ```powershell
 npm run lint
@@ -522,24 +397,22 @@ npm test
 npm run build:local
 ```
 
-Las pruebas usan Vitest y React Testing Library. No se usa Jest ni Cypress en
-el stack actual.
+Tests use Vitest and React Testing Library. The current stack does not use Jest or Cypress.
 
 ### API
 
-Desde `Bccr.Supen.Ves.Api/Codigo/`:
+From `Bccr.Supen.Ves.Api/Codigo/`:
 
 ```powershell
 dotnet build Bccr.Supen.Ves.Api.sln
 dotnet test Bccr.Supen.Ves.Api.sln
 ```
 
-La suite contiene pruebas unitarias MSTest y pruebas de integración xUnit;
-consulta los `.csproj` para ejecutar un proyecto específico.
+The suite includes MSTest unit tests and xUnit integration tests; consult the `.csproj` files to run a specific test project.
 
 ### MAPI
 
-Desde `Bccr.Supen.Ves.Mapi/Codigo/`:
+From `Bccr.Supen.Ves.Mapi/Codigo/`:
 
 ```powershell
 dotnet build Bccr.Supen.Ves.Mapi.sln --no-restore
@@ -547,159 +420,129 @@ dotnet test Bccr.Supen.Ves.Mapi.sln
 dotnet test Bccr.Supen.Ves.Mapi.sln --collect:"XPlat Code Coverage"
 ```
 
-Las pruebas por capa se encuentran en `DA.Pruebas`, `BW.Pruebas` y
-`MAPI.UnitTests`, con MSTest y Moq/NSubstitute según los patrones existentes.
-Las pruebas unitarias no deben depender de bases de datos reales, feeds
-privados, certificados de producción ni servicios externos.
+Layer-specific tests reside in `DA.Pruebas`, `BW.Pruebas`, and `MAPI.UnitTests`, using MSTest and Moq/NSubstitute according to existing patterns. Unit tests MUST NOT depend on real databases, private feeds, production certificates, or external services.
 
-### Cambios que atraviesan más de un componente
+### Changes Spanning Multiple Components
 
-Si se cambia el contrato API↔MAPI, verifica la ruta configurada, método HTTP,
-versión, parámetros, serialización/DTO, autenticación y mTLS en ambos extremos.
-Si el cambio también afecta la UI, comprueba que use la URL/configuración de
-ambiente correcta y que gestione carga y error.
+If the API↔MAPI contract changes, verify configured route, HTTP method, version, parameters, serialization/DTOs, authentication, and mTLS at both ends. If the change also affects UI, verify that it uses the correct environment-specific URL/configuration and handles loading and error states.
 
+### 6.1 What a Passing Validation Means
 
-### 6.1 Qué significa que una validación pase
+A successful command alone is not enough if:
 
-Un comando exitoso no basta si:
+- relevant new warnings appear;
+- a test was skipped to make the suite pass;
+- a contract changed without updating consumers;
+- a unit test unexpectedly requires external infrastructure;
+- the build command incremented versions or introduced unrelated changes.
 
-- aparecen warnings nuevos relevantes;
-- una prueba fue omitida para hacer pasar la suite;
-- se modificó un contrato sin actualizar consumidores;
-- un test unitario requiere infraestructura externa inesperadamente;
-- el build utilizado incrementó versiones o produjo cambios colaterales.
-
-Después de ejecutar las pruebas:
+After running tests:
 
 ```bash
 git status
 git diff
 ```
 
-o el equivalente en la herramienta Git utilizada, para comprobar que la
-validación no alteró archivos inesperadamente.
+Or use equivalent commands in the Git client to confirm validation did not unexpectedly modify files.
 
-### 6.2 Pruebas locales sin infraestructura productiva
+### 6.2 Local Tests Without Production Infrastructure
 
-Las pruebas unitarias no deben necesitar:
+Unit tests MUST NOT require:
 
-- SQL Server de producción;
-- certificados productivos;
-- credenciales reales;
-- red externa no controlada;
-- feeds adicionales no autorizados.
+- production SQL Server;
+- production certificates;
+- real credentials;
+- uncontrolled external network access;
+- unauthorized additional feeds.
 
-Las suites de integración pueden tener otros requisitos; verificar su README y
-configuración antes de interpretarlas como pruebas unitarias fallidas.
+Integration test suites may have different requirements; review their README and configuration before treating their failures as unit test failures.
 
-### 6.3 Cobertura
+### 6.3 Coverage
 
-El documento LTI utilizaba un comando `npm run test:coverage` para backend.
-Eso no se traslada literalmente.
+- API/MAPI: use the project's configured options and Quality Gate;
+- MAPI documents `--collect:"XPlat Code Coverage"`;
+- UI: follow the existing Vitest/pipeline configuration;
+- do not invent a universal coverage threshold unless the repository establishes one.
 
-En VES:
+## 7. Retained Working Practices
 
-- API/MAPI: usar las opciones y Quality Gate del proyecto;
-- MAPI documenta `--collect:"XPlat Code Coverage"`;
-- UI: respetar la configuración Vitest/pipeline existente;
-- no inventar un porcentaje universal de cobertura si el repositorio no lo
-  establece.
+- Keep changes within the task scope and respect layer responsibilities.
+- Write or update tests covering new behavior and relevant regressions, using the project's test framework.
+- Validate inputs server-side and preserve meaningful errors; do not mask failures with empty success responses.
+- Use parameterized SQL; never concatenate input data into SQL statements.
+- Keep secrets out of the repository and browser bundle.
+- Do not duplicate business rules between API and MAPI or introduce layers/dependencies without a concrete need.
+- Before deployment, follow the pipeline and procedures for the target repository and environment. Local builds do not replace deployment authorization.
 
+For detailed conventions and architecture, consult [base-standards.md](./base-standards.md), [frontend-standards.md](./frontend-standards.md), and [backend-standards.md](./backend-standards.md).
 
-## 7. Prácticas de trabajo conservadas
+### 7.1 Recommended Workflow
 
-- Mantener los cambios acotados a la tarea y respetar las capas responsables.
-- Escribir o actualizar pruebas para el comportamiento nuevo y regresiones
-  relevantes, siguiendo el framework del proyecto.
-- Validar entradas en el servidor y preservar errores útiles; no ocultar fallos
-  con respuestas de éxito vacías.
-- Usar SQL parametrizado; nunca concatenar datos de entrada para formar SQL.
-- Mantener secretos fuera del repositorio y del bundle de navegador.
-- No duplicar reglas de negocio entre API y MAPI ni añadir capas o dependencias
-  sin una necesidad concreta.
-- Antes de desplegar, seguir el pipeline y el procedimiento del repositorio y
-  ambiente correspondiente. Los builds locales no sustituyen autorización de
-  despliegue.
-
-Para convenciones y arquitectura detalladas, consultar
-[base-standards.md](./base-standards.md),
-[frontend-standards.md](./frontend-standards.md) y
-[backend-standards.md](./backend-standards.md).
-
-
-### 7.1 Flujo de trabajo recomendado
-
-> **Comentario — Adaptado de `development_guide_1.md`:** La guía anterior era
-> estrictamente secuencial. Se conserva ese valor operativo con un flujo que
-> funciona para cualquiera de los tres componentes.
+> **Note — Adapted from `development_guide_1.md`:** The previous guide was strictly sequential. Its operational value is preserved in a workflow applicable to all three components.
 
 ```text
-1. Identificar componente
+1. Identify the component
         ↓
-2. Leer estándar/README
+2. Read standards/README
         ↓
-3. Verificar ambiente
+3. Verify the environment
         ↓
-4. Hacer cambio mínimo
+4. Make the smallest necessary change
         ↓
-5. Compilar/lint
+5. Build/lint
         ↓
-6. Ejecutar pruebas
+6. Run tests
         ↓
-7. Validar integración si aplica
+7. Validate integration if applicable
         ↓
-8. Revisar git diff/status
+8. Review git diff/status
         ↓
-9. Documentar cambios relevantes
+9. Document relevant changes
 ```
 
-Para cambios complejos, seguir además la estrategia de planificación/modelos
-definida en `base-standards.md`.
+For complex changes, also follow the planning/model-selection strategy defined in `base-standards.md`.
 
-### 7.2 No “arreglar” el ambiente debilitando controles
+### 7.2 Do Not “Fix” an Environment by Weakening Controls
 
-Si una ejecución falla por:
+If execution fails due to:
 
-- autenticación;
-- certificado;
+- authentication;
+- certificates;
 - CORS;
-- permisos;
-- conexión SQL;
-- feed privado;
-- configuración de ambiente;
+- permissions;
+- SQL connectivity;
+- private feeds;
+- environment configuration;
 
-investigar primero la configuración y el acceso correcto.
+first investigate the correct configuration and access requirements.
 
-No resolver un problema local mediante:
+Do not resolve a local issue by:
 
-- `[AllowAnonymous]` no requerido;
-- desactivar validación TLS;
-- omitir mTLS fuera de Development;
-- ampliar CORS indiscriminadamente;
-- hardcodear credenciales;
-- cambiar permisos globales;
-- apuntar a una base no autorizada.
+- introducing unnecessary `[AllowAnonymous]`;
+- disabling TLS validation;
+- bypassing mTLS outside Development;
+- broadly relaxing CORS;
+- hardcoding credentials;
+- changing global permissions;
+- targeting an unauthorized database.
 
+## 8. Troubleshooting
 
-## 8. Resolución de problemas
-
-| Síntoma | Comprobaciones |
+| Symptom | Checks |
 |---|---|
-| `dotnet restore` no encuentra paquetes | Conectividad/VPN BCCR, autenticación NuGet y fuentes privadas configuradas. No añadir feeds no confiables. |
-| API no encuentra un endpoint MAPI | Revisar `ApiEndpoints`, nombre exacto del endpoint, URL del MAPI y el archivo de configuración efectivo para `Development`. |
-| Error de certificado al llamar al MAPI | Confirmar ambiente y configuración mTLS; no desactivar certificados fuera de Development. |
-| Error de conexión SQL local | Confirmar red/permisos, cadenas de conexión requeridas y User Secrets; nunca copiar credenciales al repositorio. |
-| Error de límite de carga `404.13` | Revisar que límites de IIS y de ASP.NET Core/API estén alineados; consultar README y guía de deploy de API. |
-| UI no conecta al API | Confirmar que el API está activo en el host/puerto configurado para `localdev` y revisar consola/red del navegador. |
-| Pruebas API requieren servicios externos | Ejecutar el proyecto de pruebas apropiado; pruebas unitarias deben sustituir dependencias externas. Verificar si se está intentando correr una suite de integración. |
+| `dotnet restore` cannot find packages | Verify BCCR network/VPN connectivity, NuGet authentication, and configured private feeds. Do not add untrusted feeds. |
+| API cannot find a MAPI endpoint | Review `ApiEndpoints`, the exact endpoint name, MAPI URL, and effective `Development` configuration file. |
+| Certificate error when calling MAPI | Verify environment and mTLS configuration; do not disable certificates outside Development. |
+| Local SQL connection error | Verify network/permissions, required connection strings, and User Secrets; never copy credentials into the repository. |
+| Upload limit error `404.13` | Ensure IIS and ASP.NET Core/API limits are aligned; consult the API README and deployment guide. |
+| UI cannot connect to API | Verify that API is running at the host/port configured for `localdev`, and inspect browser console/network requests. |
+| API tests require external services | Run the appropriate test project; unit tests should replace external dependencies. Check whether an integration suite is being run. |
 
-No solventar fallos de ambiente relajando autenticación, permisos, CORS o
-validaciones sin aprobación y análisis del impacto.
+Do not resolve environment failures by weakening authentication, permissions, CORS, or validation without approval and impact analysis.
 
-### 8.1 Diagnóstico por capas
+### 8.1 Layer-by-Layer Diagnosis
 
-Cuando el flujo completo falla, aislar el problema de abajo hacia arriba:
+When the full flow fails, isolate the issue from the bottom up:
 
 ```text
 SQL Server
@@ -711,132 +554,36 @@ API
 UI
 ```
 
-Ejemplos:
+Examples:
 
-- si MAPI no puede acceder a SQL Server, no diagnosticar primero React;
-- si API no puede alcanzar MAPI, comprobar `ApiEndpoints` antes de modificar UI;
-- si el health check de API responde pero UI falla, revisar configuración,
-  navegador y solicitud HTTP de la UI.
+- if MAPI cannot access SQL Server, do not diagnose React first;
+- if API cannot reach MAPI, inspect `ApiEndpoints` before modifying UI;
+- if the API health check responds but UI fails, inspect UI configuration, browser behavior, and the HTTP request.
 
-### 8.2 Información útil al reportar un fallo
+### 8.2 Useful Information When Reporting a Failure
 
-Registrar sin secretos:
+Record, without exposing secrets:
 
-- componente;
-- comando ejecutado;
-- ambiente/perfil;
-- mensaje de error;
-- endpoint/ruta lógica afectada;
-- etapa donde ocurre;
-- si build/tests pasan;
-- cambio reciente relacionado.
+- component;
+- executed command;
+- environment/profile;
+- error message;
+- affected logical endpoint/route;
+- stage at which the error occurs;
+- whether build/tests pass;
+- related recent change.
 
-No incluir:
+Do not include:
 
-- contraseñas;
+- passwords;
 - tokens;
-- connection strings reales;
-- contenido de certificados privados;
-- datos sensibles.
+- actual connection strings;
+- private certificate contents;
+- sensitive data.
 
-## 9. Instrucciones de `development_guide_1.md` que NO aplican a VES
+## 9. Development Quick Start
 
-> **Comentario — Comparación con `development_guide_1.md`:** Estas instrucciones
-> pertenecían al sistema LTI y no deben utilizarse para configurar VES.
-
-### No usar la clonación LTI
-
-No usar:
-
-```text
-git@github.com:LIDR-academy/AI4Devs-LTI-extended.git
-```
-
-para obtener VES.
-
-Seguir las instrucciones BCCR de cada repositorio.
-
-### No usar credenciales LTI
-
-No copiar usuarios, contraseñas ni `DATABASE_URL` mostrados en la guía antigua.
-Aunque aparezcan como ejemplos históricos, deben tratarse como datos no
-reutilizables.
-
-### No crear `.env` al estilo LTI
-
-No crear automáticamente:
-
-```text
-backend/.env
-frontend/.env
-REACT_APP_API_URL
-DATABASE_URL
-```
-
-VES utiliza mecanismos distintos por componente.
-
-### No iniciar PostgreSQL con Docker
-
-No ejecutar como requisito VES:
-
-```bash
-docker-compose up -d
-docker-compose ps
-```
-
-La base de datos de VES es SQL Server y el acceso de desarrollo se realiza según
-infraestructura BCCR.
-
-### No usar Prisma
-
-No ejecutar:
-
-```bash
-npm run prisma:generate
-npx prisma migrate deploy
-npx prisma db seed
-```
-
-Los backends VES son .NET/EF Core y el esquema/stored procedures se administran
-con DBA.
-
-### No ejecutar backend mediante npm
-
-No usar para API/MAPI:
-
-```bash
-npm run dev
-npm test
-npm run test:watch
-npm run test:coverage
-```
-
-Usar los comandos .NET documentados por cada solución.
-
-### No introducir Cypress
-
-No ejecutar ni instalar como parte del setup VES:
-
-```bash
-npm run cypress:open
-npm run cypress:run
-```
-
-La UI utiliza Vitest + React Testing Library.
-
-### No asumir versiones LTI de Node/npm
-
-La versión válida para UI es la indicada por `.nvmrc` del repositorio VES, no
-el mínimo Node 16/npm 8 del documento anterior.
-
-### No asumir los puertos LTI
-
-Los puertos `3000`/`3001` del sistema LTI no definen la topología VES.
-Confirmar perfiles y configuración real de cada componente.
-
-## 10. Quick start de desarrollo
-
-### Solo UI
+### UI Only
 
 ```powershell
 cd VES\Bccr.Supen.Ves.UI\Codigo
@@ -844,7 +591,7 @@ npm install
 npm start
 ```
 
-Validar:
+Validate:
 
 ```powershell
 npm run lint
@@ -852,7 +599,7 @@ npm test
 npm run build:local
 ```
 
-### Solo API
+### API Only
 
 ```powershell
 cd VES\Bccr.Supen.Ves.Api\Codigo
@@ -861,9 +608,9 @@ dotnet build Bccr.Supen.Ves.Api.sln
 dotnet test Bccr.Supen.Ves.Api.sln
 ```
 
-Confirmar el perfil/configuración antes de ejecutar el host.
+Confirm the profile/configuration before starting the host.
 
-### Solo MAPI
+### MAPI Only
 
 ```powershell
 cd VES\Bccr.Supen.Ves.Mapi\Codigo
@@ -875,70 +622,67 @@ cd MAPI
 dotnet run
 ```
 
-MAPI requiere conectividad/configuración SQL adecuada.
+MAPI requires appropriate SQL connectivity and configuration.
 
-### Flujo completo local
+### Full Local Flow
 
 ```text
-1. Configurar MAPI
-2. Iniciar MAPI
-3. Configurar API → MAPI
-4. Iniciar API
-5. Verificar health check
-6. Configurar UI → API
-7. Iniciar UI
-8. Probar flujo funcional
-9. Ejecutar pruebas de cada componente modificado
+1. Configure MAPI
+2. Start MAPI
+3. Configure API → MAPI
+4. Start API
+5. Verify the health check
+6. Configure UI → API
+7. Start UI
+8. Test the functional flow
+9. Run tests for each modified component
 ```
 
-## 11. Checklist final del ambiente de desarrollo
+## 10. Final Development Environment Checklist
 
-### Prerrequisitos
+### Prerequisites
 
-- [ ] Node coincide con `.nvmrc` para UI.
-- [ ] .NET 8 SDK disponible para API/MAPI.
-- [ ] Git disponible.
-- [ ] VPN/red BCCR disponible cuando aplica.
-- [ ] Feeds NuGet privados accesibles cuando aplica.
-- [ ] Acceso SQL autorizado para MAPI cuando aplica.
+- [ ] Node.js matches `.nvmrc` for UI.
+- [ ] .NET 8 SDK is available for API/MAPI.
+- [ ] Git is available.
+- [ ] BCCR network/VPN is available when required.
+- [ ] Private NuGet feeds are accessible when required.
+- [ ] Authorized SQL access is available for MAPI when required.
 
-### Configuración
+### Configuration
 
-- [ ] UI usa ambiente/configuración correcta.
-- [ ] API apunta al MAPI correcto.
-- [ ] MAPI tiene únicamente las conexiones autorizadas necesarias.
-- [ ] No hay secretos nuevos en archivos versionados.
-- [ ] mTLS/certificados corresponden al ambiente.
+- [ ] UI uses the correct environment/configuration.
+- [ ] API points to the correct MAPI.
+- [ ] MAPI has only the required authorized connections.
+- [ ] No new secrets were added to version-controlled files.
+- [ ] mTLS/certificates match the environment.
 
-### Ejecución
+### Execution
 
-- [ ] MAPI inicia correctamente si es necesario.
-- [ ] API inicia y health check responde.
-- [ ] UI inicia con Vite.
-- [ ] UI consume API, no MAPI.
-- [ ] Puertos efectivos fueron confirmados, no asumidos.
+- [ ] MAPI starts successfully if required.
+- [ ] API starts and its health check responds.
+- [ ] UI starts with Vite.
+- [ ] UI communicates with API, not MAPI.
+- [ ] Effective ports were verified, not assumed.
 
-### Pruebas
+### Tests
 
-- [ ] UI: lint + Vitest + build local, si se modificó UI.
-- [ ] API: build + tests, si se modificó API.
-- [ ] MAPI: build + tests, si se modificó MAPI.
-- [ ] Contratos cruzados se verificaron en ambos lados.
-- [ ] Cambios SQL se coordinaron con DBA.
-- [ ] No se introdujeron Jest/Cypress/Prisma/Docker por herencia del proyecto LTI.
+- [ ] UI: lint + Vitest + local build, if UI was changed.
+- [ ] API: build + tests, if API was changed.
+- [ ] MAPI: build + tests, if MAPI was changed.
+- [ ] Cross-component contracts were verified on both sides.
+- [ ] SQL changes were coordinated with the DBA.
 
-### Seguridad
+### Security
 
-- [ ] Sin passwords/tokens/cadenas reales en commits.
-- [ ] Sin bypass de autenticación fuera de Development.
-- [ ] Sin relajación de CORS/TLS/mTLS para resolver un fallo local.
-- [ ] Sin datos sensibles en logs o capturas de error.
+- [ ] No actual passwords/tokens/connection strings in commits.
+- [ ] No authentication bypass outside Development.
+- [ ] No CORS/TLS/mTLS weakening to resolve a local failure.
+- [ ] No sensitive data in logs or error screenshots.
 
-### Antes de cerrar
+### Before Closing
 
-- [ ] `git status` no muestra cambios inesperados.
-- [ ] Se revisó `git diff`.
-- [ ] Documentación afectada permanece alineada.
-- [ ] Se siguieron `base-standards.md`, `frontend-standards.md` y/o
-      `backend-standards.md` según el componente.
-
+- [ ] `git status` shows no unexpected changes.
+- [ ] `git diff` was reviewed.
+- [ ] Affected documentation remains aligned.
+- [ ] `base-standards.md`, `frontend-standards.md`, and/or `backend-standards.md` were followed as applicable to the component.

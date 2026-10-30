@@ -1,3 +1,5 @@
+> **ARCHIVO HISTÓRICO (A):** describe el Web Forms/VB.NET original. Se conserva como evidencia y referencia de migración; no utilizar sus patrones tecnológicos para generar componentes React nuevos.
+
 # Guía de frontend para VES
 
 ## Alcance

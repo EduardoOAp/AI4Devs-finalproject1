@@ -1,3 +1,5 @@
+> **REFERENCIA HISTÓRICA — NO NORMATIVA PARA LA ARQUITECTURA VIGENTE.** Modelo conceptual histórico de documentos y de SeguridadVES, reconstruido a partir de servicios ASPX/SOAP. Los vínculos y tipos no están certificados como integridad física del MAPI. Para contratos vigentes de transferencia, consultar [data-model.md](../data-model.md); para persistencia MAPI, consultar [SCHEMA.md](../../VES/Bccr.Supen.Ves.Mapi/Documentacion/SCHEMA.md). No ejecutar cambios de código, ORM, SQL ni permisos a partir de esta referencia.
+
 # Data model VES
 
 ## Objetivo
